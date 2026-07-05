@@ -25,16 +25,25 @@ const SLOT_LABELS: Record<SlotKey, string> = {
 function ItemPhoto({ item, size = "md" }: { item: ClothingItem; size?: "sm" | "md" | "lg" }) {
   const sizeClass = size === "lg" ? "h-32" : size === "md" ? "h-24" : "h-16";
   return (
-    <div className={`w-full ${sizeClass} bg-muted border-2 border-black overflow-hidden relative`}>
+    <div
+      className={`w-full ${sizeClass} border-2 border-black overflow-hidden relative`}
+      style={{
+        backgroundImage:
+          item.imageObjectPath
+            ? "repeating-conic-gradient(#e8e3dd 0% 25%, #f9f4ee 0% 50%)"
+            : undefined,
+        backgroundSize: "10px 10px",
+      }}
+    >
       {item.imageObjectPath ? (
         <img
           src={getImageUrl(item.imageObjectPath)!}
           alt={item.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
       ) : (
         <div className="w-full h-full bg-secondary/30 flex items-center justify-center p-1">
-          <span className="text-[9px] font-bold uppercase text-center leading-tight">{item.name}</span>
+          <span className="text-[9px] font-bold uppercase text-center leading-tight">—</span>
         </div>
       )}
     </div>
@@ -179,18 +188,24 @@ export default function SavedPage() {
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pt-1 border-t border-black/10">
                       {extras.map((item) => (
                         <div key={item.id} className="flex-none flex flex-col items-center gap-0.5">
-                          <div className="w-14 h-16 bg-muted border-2 border-black overflow-hidden">
+                          <div
+                            className="w-14 h-16 border-2 border-black overflow-hidden"
+                            style={{
+                              backgroundImage: item.imageObjectPath
+                                ? "repeating-conic-gradient(#e8e3dd 0% 25%, #f9f4ee 0% 50%)"
+                                : undefined,
+                              backgroundSize: "10px 10px",
+                            }}
+                          >
                             {item.imageObjectPath ? (
                               <img
                                 src={getImageUrl(item.imageObjectPath)!}
                                 alt={item.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                               />
                             ) : (
                               <div className="w-full h-full bg-secondary/30 flex items-center justify-center p-1">
-                                <span className="text-[8px] font-bold uppercase text-center leading-tight">
-                                  {item.name}
-                                </span>
+                                <span className="text-[8px] font-bold uppercase text-center leading-tight">—</span>
                               </div>
                             )}
                           </div>

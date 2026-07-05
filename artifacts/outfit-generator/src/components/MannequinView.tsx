@@ -27,7 +27,7 @@ function ClothingZone({
       <img
         src={getImageUrl(item.imageObjectPath)!}
         alt={item.name}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-contain"
         draggable={false}
       />
     );

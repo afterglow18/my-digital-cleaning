@@ -160,13 +160,11 @@ export const SwipeRow = forwardRef<SwipeRowHandle, SwipeRowProps>(
                 opacity:         i === 0 ? "1" : "0.4",
               }}
             >
-              {/* Photo */}
-              <div className="flex-1 bg-muted overflow-hidden relative"
+              {/* Photo — checkerboard so transparent PNGs look clean */}
+              <div className="flex-1 overflow-hidden relative"
                    style={{
-                     backgroundImage: item.imageObjectPath
-                       ? undefined
-                       : undefined,
-                     // checkerboard for transparent PNGs
+                     backgroundImage:
+                       "repeating-conic-gradient(#e8e3dd 0% 25%, #f9f4ee 0% 50%)",
                      backgroundSize: "10px 10px",
                    }}>
                 {item.imageObjectPath ? (
