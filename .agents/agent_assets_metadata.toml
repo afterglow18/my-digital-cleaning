@@ -6,3 +6,27 @@ id = "9IEhqRWii_NLUPreYof3U"
 uri = "file://artifacts/outfit-generator/public/icon-1024.png"
 type = "image"
 title = "My Virtual Closet — App Icon"
+
+[[outputs]]
+id = "XpZorJC20q7B172UGJsHG"
+uri = "file://app-store/AppIcon-preview-60pt@3x.png"
+type = "image"
+title = "60pt @3x — Modern iPhone home screen (180×180px rendered)"
+
+[[outputs]]
+id = "gJmK9W2cTfUroOjAqhyc2"
+uri = "file://app-store/AppIcon-preview-60pt@2x.png"
+type = "image"
+title = "60pt @2x — Older iPhone home screen (120×120px rendered)"
+
+[[outputs]]
+id = "QAzlRJlaEP-9bKoYcg0DC"
+uri = "file://app-store/AppIcon-preview-29pt@3x.png"
+type = "image"
+title = "29pt @3x — Settings icon slot (87×87px rendered)"
+
+[[outputs]]
+id = "Q5EaqexZmf04Gafa4Ye0-"
+uri = "file://app-store/AppIcon-1024.png"
+type = "image"
+title = "AppIcon-1024.png — Final App Store submission file"
