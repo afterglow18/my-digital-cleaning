@@ -441,17 +441,49 @@ export default function GeneratePage() {
               </div>
             )}
 
+            {/* ── Rug cover — hides the three baked-in wardrobe circle buttons ──
+                The closet-bg.png image has hanger / SAVE OUTFIT ♡ / mannequin
+                circles baked into the rug.  We redraw the rug using a zoomed-in
+                background-image crop of the circle-free top strip of the rug
+                (y = barY → barY+0.013, just above the circles).  That thin slice
+                is scaled to fill the full bar height, reproducing the authentic
+                rug colour without any circles. */}
+            {(() => {
+              const barH           = pH(ir, LM.barBot - LM.barY);
+              const rugStripH      = pH(ir, 0.013);          // circle-free rug top strip
+              const scaleY         = barH / Math.max(1, rugStripH);
+              const bgScaleH       = ir.height * scaleY;
+              const coverBgPosX    = -pW(ir, LM.doorL);      // same x alignment as rod overlays
+              const coverBgPosY    = -pY(ir, LM.barY) * scaleY;
+              return (
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    top:    pY(ir, LM.barY),
+                    left:   pX(ir, LM.doorL),
+                    right:  ir.left + pW(ir, 1 - LM.doorR),
+                    height: barH,
+                    zIndex: 18,
+                    pointerEvents: "none",
+                    backgroundImage: "url('/closet-bg.png')",
+                    backgroundSize: `${ir.width}px ${bgScaleH}px`,
+                    backgroundPosition: `${coverBgPosX}px ${coverBgPosY}px`,
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+              );
+            })()}
+
             {/* ── Rug bar — CTA buttons ── */}
-            {/* We draw our own buttons over the rug area so we control the labels.
-                The rug background image is visible around them. */}
+            {/* Positioned over the rug cover at z=22 so they appear on the rug
+                without any wardrobe circles showing through. */}
             <div
               style={{
                 position: "absolute",
                 top:    pY(ir, LM.barY),
-                left:   pX(ir, LM.saveBtnL),
-                right:  ir.left + pW(ir, 1 - LM.saveBtnR),
-                bottom: ir.top + ir.height - pY(ir, LM.barBot),
-                // ↑ equivalent to height: pH(ir, LM.barBot - LM.barY)
+                left:   pX(ir, LM.doorL),
+                right:  ir.left + pW(ir, 1 - LM.doorR),
                 height: pH(ir, LM.barBot - LM.barY),
                 zIndex: 22,
                 display: "flex",
