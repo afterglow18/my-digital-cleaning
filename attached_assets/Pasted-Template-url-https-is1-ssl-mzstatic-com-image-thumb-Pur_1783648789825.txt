@@ -1,0 +1,50 @@
+Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/10/3a/cf/103acfde-9517-2771-efe3-53ba930697ce/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}
+	Height: 152
+	Width: 152
+Min os version: 15.0
+Processing state: VALID
+Version: 45
+Uploaded date: 2026-07-09 18:57:36-07:00
+Expiration date: 2026-10-07 18:57:36-07:00
+Audience type: APP_STORE_ELIGIBLE
+Computed min macOSversion: 12.0
+Computed min visionOSversion: 1.0
+
+Wait until build cdb7eacb-58d6-410e-93f8-29b4cd96f10b and its beta details are processed
+Processing build cdb7eacb-58d6-410e-93f8-29b4cd96f10b is completed
+Processing build cdb7eacb-58d6-410e-93f8-29b4cd96f10b beta detail cdb7eacb-58d6-410e-93f8-29b4cd96f10b is completed
+
+Processed build and beta details are
+-- Build --
+Id: cdb7eacb-58d6-410e-93f8-29b4cd96f10b
+Type: builds
+Expired: False
+Icon asset token: 
+	Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/10/3a/cf/103acfde-9517-2771-efe3-53ba930697ce/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}
+	Height: 152
+	Width: 152
+Min os version: 15.0
+Processing state: VALID
+Version: 45
+Uploaded date: 2026-07-09 18:57:36-07:00
+Expiration date: 2026-10-07 18:57:36-07:00
+Audience type: APP_STORE_ELIGIBLE
+Computed min macOSversion: 12.0
+Computed min visionOSversion: 1.0
+-- Build Beta Detail --
+Id: cdb7eacb-58d6-410e-93f8-29b4cd96f10b
+Type: buildBetaDetails
+Auto notify enabled: True
+External build state: MISSING_EXPORT_COMPLIANCE
+Internal build state: MISSING_EXPORT_COMPLIANCE
+
+Submit build 'cdb7eacb-58d6-410e-93f8-29b4cd96f10b' to TestFlight beta review
+Complete test information is required to submit application My Digital Closet App build for external testing.
+App is missing required Beta App Information: Feedback Email.
+App is missing required Beta App Review Information: First Name, Last Name, Phone Number, Email.
+Fill in test information at https://appstoreconnect.apple.com/apps/6789233372/testflight/test-info.
+Failed to publish /Users/builder/clone/build/ipa/App.ipa
+
+
+Build failed :|
+Step 12 script `Upload to TestFlight` exited with status code 1
