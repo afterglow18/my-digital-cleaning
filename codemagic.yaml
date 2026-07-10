@@ -108,11 +108,21 @@ workflows:
 
       - name: Upload to TestFlight
         script: |
+          # Write key to file, normalising any escaped \n to real newlines
+          python3 - <<'EOF'
+          import os
+          key = os.environ['APP_STORE_CONNECT_PRIVATE_KEY']
+          if '\\n' in key and '\n' not in key:
+              key = key.replace('\\n', '\n')
+          with open('/tmp/AuthKey.p8', 'w') as f:
+              f.write(key.strip() + '\n')
+          print('First line:', key.strip().split('\n')[0])
+          EOF
           app-store-connect publish \
             --path "$CM_BUILD_DIR/build/ipa/App.ipa" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key "@env:APP_STORE_CONNECT_PRIVATE_KEY" \
+            --private-key "@file:/tmp/AuthKey.p8" \
             --testflight
 
     artifacts:
