@@ -1,11 +1,12 @@
 /**
  * FavoritesPage ("Totally 💛") — every clothing item the user has hearted.
+ * Displays as a 4-column grid with uniform square cards.
  * Items can be dragged to reorder; order is persisted in localStorage.
- * Tap an item card to open the full details sheet.
+ * Tap an item to open the full details sheet.
  */
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Heart, GripVertical } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Heart } from "lucide-react";
 import {
   useListClothing,
   useUpdateClothingItem,
@@ -28,7 +29,7 @@ import {
 import {
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -50,7 +51,6 @@ function getSavedOrder(): number[] {
 function saveOrder(ids: number[]) {
   try { localStorage.setItem(ORDER_KEY, JSON.stringify(ids)); } catch {}
 }
-
 function applyOrder(items: ClothingItem[], order: number[]): ClothingItem[] {
   if (!order.length) return items;
   const map = new Map(items.map((i) => [i.id, i]));
@@ -59,18 +59,14 @@ function applyOrder(items: ClothingItem[], order: number[]): ClothingItem[] {
   return [...ordered, ...rest];
 }
 
-// ── Sortable card ─────────────────────────────────────────────────────────────
+// ── Sortable tile ─────────────────────────────────────────────────────────────
 
-function SortableFavoriteCard({
+function SortableTile({
   item,
   onTap,
-  onUnheart,
-  isUpdating,
 }: {
   item: ClothingItem;
   onTap: (item: ClothingItem) => void;
-  onUnheart: (item: ClothingItem) => void;
-  isUpdating: boolean;
 }) {
   const {
     attributes,
@@ -84,93 +80,48 @@ function SortableFavoriteCard({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
     zIndex: isDragging ? 50 : undefined,
+    position: "relative",
   };
 
   return (
-    <motion.div
-      ref={setNodeRef}
-      style={style}
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden"
-    >
-      {/* Card header */}
-      <div className="px-3 py-2.5 border-b-2 border-black flex justify-between items-center bg-primary gap-2">
-        {/* Drag handle */}
-        <button
-          {...attributes}
-          {...listeners}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1 rounded"
-          aria-label="Drag to reorder"
-        >
-          <GripVertical className="w-4 h-4 text-black/40" />
-        </button>
-
-        {/* Tap name to open details */}
-        <button
-          onClick={() => onTap(item)}
-          className="flex-1 text-left min-w-0"
-        >
-          <h3 className="font-display font-bold text-lg uppercase tracking-tight truncate">
-            {item.name || CATEGORY_LABELS[item.category ?? ""] || "Item"}
-          </h3>
-        </button>
-
-        {/* Unheart */}
-        <button
-          onClick={() => onUnheart(item)}
-          disabled={isUpdating}
-          className="w-8 h-8 flex-shrink-0 flex items-center justify-center
-                     bg-red-500 border-2 border-black rounded-full
-                     shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                     active:translate-y-0.5 active:translate-x-0.5 active:shadow-none
-                     transition-all disabled:opacity-50"
-          title="Remove from Totally"
-        >
-          <Heart className="w-3.5 h-3.5 text-white" fill="white" />
-        </button>
-      </div>
-
-      {/* Tap photo to open details */}
-      <button onClick={() => onTap(item)} className="w-full text-left">
-        <div
-          className="w-full h-52 border-b-2 border-black overflow-hidden"
-          style={{ background: "#FDECEF" }}
-        >
-          {item.imageObjectPath ? (
-            <img
-              src={getImageUrl(item.imageObjectPath)!}
-              alt={item.name}
-              className="w-full h-full"
-              style={{ objectFit: "contain", objectPosition: "center" }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-4xl opacity-20">
-                {item.category === "shoes"
-                  ? "👟"
-                  : item.category === "dresses"
-                  ? "👗"
-                  : item.category === "accessories"
-                  ? "👜"
-                  : "👚"}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-3 py-3">
-          <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wide">
-            {CATEGORY_LABELS[item.category ?? ""] ?? item.category}
-          </span>
-        </div>
+    <div ref={setNodeRef} style={style}>
+      {/* Drag + tap target — whole tile */}
+      <button
+        {...attributes}
+        {...listeners}
+        onClick={() => onTap(item)}
+        className="w-full aspect-square border-2 border-black rounded-xl overflow-hidden
+                   shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                   active:shadow-none active:translate-x-0.5 active:translate-y-0.5
+                   transition-all touch-none"
+        style={{ background: "#FDECEF", display: "block", padding: 0, cursor: "grab" }}
+      >
+        {item.imageObjectPath ? (
+          <img
+            src={getImageUrl(item.imageObjectPath)!}
+            alt={item.name}
+            className="w-full h-full"
+            style={{ objectFit: "cover", objectPosition: "center", pointerEvents: "none" }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-2xl opacity-30">
+              {item.category === "shoes" ? "👟"
+                : item.category === "dresses" ? "👗"
+                : item.category === "accessories" ? "👜"
+                : "👚"}
+            </span>
+          </div>
+        )}
       </button>
-    </motion.div>
+
+      {/* Category label */}
+      <p className="mt-1 text-[9px] font-bold uppercase text-center text-muted-foreground tracking-wide truncate">
+        {item.name || CATEGORY_LABELS[item.category ?? ""] || "—"}
+      </p>
+    </div>
   );
 }
 
@@ -193,70 +144,54 @@ export default function FavoritesPage() {
   const [orderedIds, setOrderedIds] = useState<number[]>([]);
   const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
 
-  // Load saved order on mount
-  useEffect(() => {
-    setOrderedIds(getSavedOrder());
-  }, []);
+  useEffect(() => { setOrderedIds(getSavedOrder()); }, []);
 
   const favorites = applyOrder(rawFavorites, orderedIds);
 
   const updateItem  = useUpdateClothingItem();
   const queryClient = useQueryClient();
 
-  const handleUnheart = (item: ClothingItem) => {
-    updateItem.mutate(
-      { id: item.id, data: { isFavorite: false } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-          // Remove from order
-          setOrderedIds((prev) => {
-            const next = prev.filter((id) => id !== item.id);
-            saveOrder(next);
-            return next;
-          });
-        },
-      }
-    );
-  };
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 5 } }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    setOrderedIds((prev) => {
+    setOrderedIds(() => {
       const ids = favorites.map((i) => i.id);
-      // Merge: start from displayed order
-      const base = ids.length ? ids : prev;
-      const oldIndex = base.indexOf(active.id as number);
-      const newIndex = base.indexOf(over.id as number);
-      if (oldIndex === -1 || newIndex === -1) return prev;
-      const next = arrayMove(base, oldIndex, newIndex);
+      const oldIndex = ids.indexOf(active.id as number);
+      const newIndex = ids.indexOf(over.id as number);
+      if (oldIndex === -1 || newIndex === -1) return ids;
+      const next = arrayMove(ids, oldIndex, newIndex);
       saveOrder(next);
       return next;
     });
   };
 
-  return (
-    <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
+  const handleDetailsClose = () => {
+    // Refresh in case isFavorite changed inside the sheet
+    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+    setDetailsItem(null);
+  };
 
-      <header className="mb-6">
+  return (
+    <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10">
+
+      <header className="mb-5">
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">
           Totally 💛
         </h1>
         <p className="font-medium text-muted-foreground text-sm">
-          Hearted pieces. Drag to reorder.
+          Hearted pieces. Hold &amp; drag to reorder.
         </p>
       </header>
 
       {isLoading ? (
-        <div className="flex flex-col gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-52 bg-muted animate-pulse border-2 border-black rounded-xl" />
+        <div className="grid grid-cols-4 gap-3">
+          {[1,2,3,4,5,6,7,8].map((i) => (
+            <div key={i} className="aspect-square bg-muted animate-pulse border-2 border-black rounded-xl" />
           ))}
         </div>
       ) : favorites.length > 0 ? (
@@ -265,23 +200,12 @@ export default function FavoritesPage() {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext
-            items={favorites.map((i) => i.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
-              <div className="flex flex-col gap-6">
-                {favorites.map((item) => (
-                  <SortableFavoriteCard
-                    key={item.id}
-                    item={item}
-                    onTap={setDetailsItem}
-                    onUnheart={handleUnheart}
-                    isUpdating={updateItem.isPending}
-                  />
-                ))}
-              </div>
-            </AnimatePresence>
+          <SortableContext items={favorites.map((i) => i.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-4 gap-3">
+              {favorites.map((item) => (
+                <SortableTile key={item.id} item={item} onTap={setDetailsItem} />
+              ))}
+            </div>
           </SortableContext>
         </DndContext>
       ) : (
@@ -304,7 +228,7 @@ export default function FavoritesPage() {
           <ItemDetailsSheet
             key={detailsItem.id}
             item={detailsItem}
-            onClose={() => setDetailsItem(null)}
+            onClose={handleDetailsClose}
           />
         )}
       </AnimatePresence>
