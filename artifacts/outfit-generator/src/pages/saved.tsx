@@ -296,7 +296,7 @@ export default function SavedPage() {
                               <span className="text-[8px] font-bold uppercase text-muted-foreground truncate w-full text-center">Acc</span>
                               {item.isFavorite && <span className="absolute top-0 right-0 text-[9px] leading-none">⭐</span>}
                             </button>
-                          })}
+                          ))}
                           {Array.from({ length: emptySlots }).map((_, i) => (
                             <button
                               key={`empty-${i}`}
