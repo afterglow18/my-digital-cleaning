@@ -14,6 +14,7 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
 import { FREE_OUTFIT_LIMIT } from "@/lib/entitlements";
 import { QuickAddSheet } from "@/components/clothing/QuickAddSheet";
+import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 
 const SLOT_ORDER = ["tops", "bottoms", "shoes", "dresses", "outerwear", "accessories"] as const;
 type SlotKey = (typeof SLOT_ORDER)[number];
@@ -58,6 +59,7 @@ export default function SavedPage() {
   const { tier } = useEntitlements();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [addAccessoryToId, setAddAccessoryToId] = useState<number | null>(null);
+  const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
 
   const isFree = tier === "free";
   const outfitCount = outfits?.length ?? 0;
@@ -281,7 +283,7 @@ export default function SavedPage() {
                         {/* 5-slot accessory row */}
                         <div className="grid grid-cols-5 gap-1.5">
                           {accItems.map((item) => (
-                            <div key={item.id} className="flex flex-col items-center gap-0.5">
+                            <button key={item.id} onClick={() => setDetailsItem(item)} className="flex flex-col items-center gap-0.5 relative">
                               <div className="w-full aspect-square border-2 border-black overflow-hidden" style={{ background: "#FDECEF" }}>
                                 {item.imageObjectPath ? (
                                   <img src={getImageUrl(item.imageObjectPath)!} alt={item.name} className="w-full h-full object-contain" />
@@ -292,8 +294,9 @@ export default function SavedPage() {
                                 )}
                               </div>
                               <span className="text-[8px] font-bold uppercase text-muted-foreground truncate w-full text-center">Acc</span>
-                            </div>
-                          ))}
+                              {item.isFavorite && <span className="absolute top-0 right-0 text-[9px] leading-none">⭐</span>}
+                            </button>
+                          })}
                           {Array.from({ length: emptySlots }).map((_, i) => (
                             <button
                               key={`empty-${i}`}
@@ -361,6 +364,17 @@ export default function SavedPage() {
                 ?.items?.filter((i) => i.category === "accessories").length ?? 0
             }
             onCreated={handleAccessoryCreated}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Accessory details sheet */}
+      <AnimatePresence>
+        {detailsItem && (
+          <ItemDetailsSheet
+            key={detailsItem.id}
+            item={detailsItem}
+            onClose={() => setDetailsItem(null)}
           />
         )}
       </AnimatePresence>
