@@ -75,7 +75,7 @@ export const Scene3 = () => {
           animate={phase >= 3 ? { scale: 1 } : { scale: 0 }}
           transition={springBouncy}
         >
-          <span className="font-body font-bold text-[3.5cqh] tracking-widest uppercase">DigitalCloset</span>
+          <span className="font-body font-bold text-[3.5cqh] tracking-widest uppercase">My Digital Closet</span>
         </motion.div>
       </motion.div>
     </SceneContainer>
