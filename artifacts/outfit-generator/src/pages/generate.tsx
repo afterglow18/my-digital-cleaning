@@ -278,8 +278,34 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
+              const label = key === "fragrances" ? "FRAGRANCES" : key.toUpperCase();
+              const labelY = pY(ir, (lm.btnCY + lm.sectionTop) / 2);
+
               return (
                 <React.Fragment key={key}>
+
+                  {/* ── Category label ── */}
+                  <div style={{
+                    position: "absolute",
+                    top: labelY,
+                    left: carLeft,
+                    width: carW,
+                    transform: "translateY(-50%)",
+                    zIndex: 12,
+                    textAlign: "center",
+                    pointerEvents: "none",
+                  }}>
+                    <span style={{
+                      fontSize: Math.max(9, pH(ir, 0.013)),
+                      fontWeight: 800,
+                      letterSpacing: "0.12em",
+                      color: "rgba(120,60,70,0.75)",
+                      fontFamily: "var(--font-display)",
+                      textTransform: "uppercase",
+                    }}>
+                      {label}
+                    </span>
+                  </div>
 
                   {items.length > 0 ? (
                     <div
