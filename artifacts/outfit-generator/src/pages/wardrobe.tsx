@@ -393,8 +393,8 @@ export default function WardrobePage() {
               padding: 0,
             }}
           >
-            <span style={{ fontSize: pW(ir, 0.030), fontWeight: 900, color: "#fff", letterSpacing: "0.06em", fontFamily: "var(--font-display)", textShadow: "0 1px 2px rgba(0,0,0,0.18)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.026), fontWeight: 800, color: "#fff", letterSpacing: "0.04em", fontFamily: "var(--font-display)", textShadow: "0 1px 2px rgba(0,0,0,0.18)" }}>LOOK 🩷</span>
+            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#000", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
+            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#000", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>LOOK 🩷</span>
           </button>
         </>
       )}
