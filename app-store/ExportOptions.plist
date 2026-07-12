@@ -7,6 +7,15 @@
   <string>app-store-connect</string>
   <key>teamID</key>
   <string>2A78MFVCJS</string>
+  <key>signingStyle</key>
+  <string>manual</string>
+  <key>signingCertificate</key>
+  <string>Apple Distribution</string>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>com.mydigitalvanity.app</key>
+    <string>MyDigitalVanity_AppStore</string>
+  </dict>
   <key>uploadSymbols</key>
   <true/>
   <key>compileBitcode</key>
