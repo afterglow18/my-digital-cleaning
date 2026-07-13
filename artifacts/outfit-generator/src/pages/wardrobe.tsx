@@ -429,10 +429,10 @@ export default function WardrobePage() {
             aria-label="Save current case"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.9466) - pW(ir, 0.0625),
-              left:   pX(ir, 0.491)  - pW(ir, 0.0625),
-              width:  pW(ir, 0.125),
-              height: pW(ir, 0.125),
+              top:    pY(ir, 0.9466) - pW(ir, 0.074),
+              left:   pX(ir, 0.491)  - pW(ir, 0.074),
+              width:  pW(ir, 0.148),
+              height: pW(ir, 0.148),
               borderRadius: "50%",
               zIndex: 26,
               background: "linear-gradient(160deg, #E8D4B0 0%, #B8894E 100%)",
