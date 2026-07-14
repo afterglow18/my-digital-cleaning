@@ -29,8 +29,8 @@ const NAV_H = 90;
 const PINK  = "#E8D4B0";
 
 const LM = {
-  doorL: 0.207,
-  doorR: 0.801,
+  doorL: 0.182,
+  doorR: 0.776,
   rows: [
     { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
     { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
