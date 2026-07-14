@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ClothingItemInputCategory } from "@workspace/api-client-react";
+import { ClothingItemInputCategory } from "@/hooks/useLocalDB";
 import { useCallback, useState } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";

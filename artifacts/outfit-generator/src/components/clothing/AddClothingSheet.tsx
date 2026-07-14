@@ -1,7 +1,7 @@
 import React from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { ClothingForm, ClothingFormData } from "./ClothingForm";
-import { useCreateClothingItem, getListClothingQueryKey } from "@workspace/api-client-react";
+import { useCreateClothingItem, getListClothingQueryKey } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface AddClothingSheetProps {

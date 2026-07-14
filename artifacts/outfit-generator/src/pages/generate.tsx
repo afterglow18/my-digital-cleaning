@@ -15,8 +15,8 @@ import React, {
 import {
   useListClothing, getListClothingQueryKey,
   useGenerateOutfit, useSaveOutfit, getListOutfitsQueryKey,
-  ClothingItem,
-} from "@workspace/api-client-react";
+  type ClothingItem,
+} from "@/hooks/useLocalDB";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";

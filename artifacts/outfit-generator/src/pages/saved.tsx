@@ -6,8 +6,8 @@ import {
   useAddItemToOutfit,
   useRemoveItemFromOutfit,
   getListOutfitsQueryKey,
-  ClothingItem,
-} from "@workspace/api-client-react";
+  type ClothingItem,
+} from "@/hooks/useLocalDB";
 import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils";

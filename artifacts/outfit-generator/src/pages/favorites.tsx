@@ -11,8 +11,8 @@ import {
   useListClothing,
   useUpdateClothingItem,
   getListClothingQueryKey,
-  ClothingItem,
-} from "@workspace/api-client-react";
+  type ClothingItem,
+} from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";

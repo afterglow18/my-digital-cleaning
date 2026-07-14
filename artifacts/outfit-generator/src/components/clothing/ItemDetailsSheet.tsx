@@ -9,13 +9,14 @@ import {
   X, Heart, Trash2, Save, ChevronDown,
 } from "lucide-react";
 import {
-  ClothingItem,
-  ClothingItemUpdateCategory,
+  type ClothingItem,
+  type ClothingItemUpdateCategory,
   useUpdateClothingItem,
   useDeleteClothingItem,
   getListClothingQueryKey,
   getListOutfitsQueryKey,
-} from "@workspace/api-client-react";
+  getWardrobeStatsQueryKey,
+} from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
 

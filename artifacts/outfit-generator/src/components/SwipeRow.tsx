@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { Plus } from "lucide-react";
-import { ClothingItem } from "@workspace/api-client-react";
+import { type ClothingItem } from "@/hooks/useLocalDB";
 import { getImageUrl } from "@/lib/utils";
 
 // ── Constants (fallback defaults) ─────────────────────────────────────────────

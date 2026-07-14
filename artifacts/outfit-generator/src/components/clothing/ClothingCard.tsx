@@ -1,5 +1,5 @@
 import React from "react";
-import { ClothingItem } from "@workspace/api-client-react";
+import { type ClothingItem } from "@/hooks/useLocalDB";
 import { getImageUrl } from "@/lib/utils";
 
 interface ClothingCardProps {

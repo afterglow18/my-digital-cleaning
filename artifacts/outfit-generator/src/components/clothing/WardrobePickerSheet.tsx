@@ -11,9 +11,9 @@ import { X, Plus } from "lucide-react";
 import {
   useListClothing,
   getListClothingQueryKey,
-  ListClothingCategory,
-  ClothingItem,
-} from "@workspace/api-client-react";
+  type ListClothingCategory,
+  type ClothingItem,
+} from "@/hooks/useLocalDB";
 import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuickAddSheet } from "./QuickAddSheet";

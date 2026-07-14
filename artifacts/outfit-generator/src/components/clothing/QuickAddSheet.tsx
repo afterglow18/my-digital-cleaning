@@ -17,7 +17,8 @@ import {
 import {
   useCreateClothingItem,
   getListClothingQueryKey,
-} from "@workspace/api-client-react";
+  getWardrobeStatsQueryKey,
+} from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { encodeToPng } from "@/lib/processImage";
 
@@ -67,7 +68,7 @@ interface Props {
   category:      Category;
   existingCount: number;
   /** Called with the newly created item after a successful upload. */
-  onCreated?:    (item: import("@workspace/api-client-react").ClothingItem) => void;
+  onCreated?:    (item: import("@/lib/db").ClothingItem) => void;
 }
 
 const PHOTO_TIPS = [

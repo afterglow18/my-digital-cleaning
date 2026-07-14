@@ -34,7 +34,7 @@ const SCALE_SIDE  = 0.88;            // side cards are 88% of center
 const OPACITY_SIDE = 0.72;           // side cards fade to 72%
 const BG_CENTER   = "rgba(253,236,239,1)";  // blush-pink card for selected item
 const SHADOW_CTR  = "0 4px 18px rgba(200,100,120,0.22), 0 1px 4px rgba(0,0,0,0.10)";
-import { ClothingItem } from "@workspace/api-client-react";
+import { type ClothingItem } from "@/hooks/useLocalDB";
 import { getImageUrl } from "@/lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -6,8 +6,8 @@ import {
   useUpdateClothingItem, 
   useDeleteClothingItem,
   getListClothingQueryKey,
-  getGetClothingItemQueryKey
-} from "@workspace/api-client-react";
+  getGetClothingItemQueryKey,
+} from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 

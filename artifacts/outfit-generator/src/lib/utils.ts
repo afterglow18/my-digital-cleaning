@@ -5,9 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function getImageUrl(path: string | null | undefined) {
+/**
+ * Returns a displayable image URL.
+ *
+ * Local-first: all images are stored as data URLs (e.g. "data:image/jpeg;base64,…").
+ * Legacy object-storage paths ("/..." that don't start with "data:") are returned
+ * as-is so any migrated items still resolve via the API proxy — though new items
+ * will always use data URLs.
+ */
+export function getImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
-  // Data URLs are stored directly — return as-is
-  if (path.startsWith("data:")) return path;
-  return `/api/storage${path}`;
+  return path;
 }
