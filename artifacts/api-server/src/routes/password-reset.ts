@@ -50,9 +50,9 @@ router.post("/auth/forgot-password", async (req, res): Promise<void> => {
 
     const resend = getResend();
     const { data, error } = await resend.emails.send({
-      from: "My Digital Closet <support@afterglow-tanningsalon.com>",
+      from: "My Digital Cleaning <support@afterglow-tanningsalon.com>",
       to: user.email,
-      subject: "Reset your My Digital Closet password",
+      subject: "Reset your My Digital Cleaning password",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
           <h1 style="font-size:24px;font-weight:800;color:#1a1a1a;margin-bottom:8px;">Reset your password ✨</h1>

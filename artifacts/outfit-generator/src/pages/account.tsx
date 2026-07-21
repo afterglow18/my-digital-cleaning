@@ -162,7 +162,7 @@ export default function AccountPage() {
       {/* Page title */}
       <header className="mb-5">
         <h1 className="font-display font-bold text-4xl uppercase tracking-tighter leading-none">
-          My Digital<br />Suitcase
+          My Digital<br />Cleaning
         </h1>
       </header>
 
@@ -301,7 +301,7 @@ export default function AccountPage() {
         </Card>
 
         {/* ── 3. APP INFO ─────────────────────────────────────────────────── */}
-        <Card emoji="🧳" title="My Digital Suitcase">
+        <Card emoji="🧹" title="My Digital Cleaning">
           <p className="text-sm text-black/55 leading-snug">
             Version 1.0.0
           </p>

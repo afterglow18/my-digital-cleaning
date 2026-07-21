@@ -162,7 +162,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                          active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
             >
               <Plus className="w-5 h-5" />
-              Add New {label} to Suitcase
+              Add New {label} to Cleaning
             </button>
           ) : showCategoryPicker ? (
             /* Extras mode — category chips */
@@ -200,7 +200,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                          active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
             >
               <Plus className="w-5 h-5" />
-              Add New Item to Suitcase
+              Add New Item to Cleaning
             </button>
           )}
         </div>

@@ -303,7 +303,7 @@ export default function WelcomePage({ onEnter }: Props) {
             pointerEvents: phase === "idle" ? "auto" : "none",
           }}
         >
-          Open Suitcase ✨
+          Open App ✨
         </motion.button>
       </motion.div>
 

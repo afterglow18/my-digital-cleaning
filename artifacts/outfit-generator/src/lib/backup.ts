@@ -1,5 +1,5 @@
 /**
- * Backup & Restore for My Digital Suitcase.
+ * Backup & Restore for My Digital Cleaning.
  *
  * Export: bundles ALL clothing items (including embedded image data URLs) and
  *         saved outfits into a single JSON file, shared via the iOS Share Sheet.
@@ -81,7 +81,7 @@ export async function exportBackup(): Promise<void> {
     // Share via iOS Share Sheet
     const { Share } = await import("@capacitor/share");
     await Share.share({
-      title: "My Digital Suitcase Backup",
+      title: "My Digital Cleaning Backup",
       text:  `Backup from ${dateStr} — ${clothing.length} items, ${outfits.length} outfits`,
       url:   uri,
     });

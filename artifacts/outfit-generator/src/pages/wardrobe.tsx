@@ -215,7 +215,7 @@ export default function WardrobePage() {
       {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
       <img
         src="/suitcase-open-bg.jpg"
-        alt="My Digital Suitcase"
+        alt="My Digital Cleaning"
         style={{
           position: "absolute",
           top: 0, left: 0,
