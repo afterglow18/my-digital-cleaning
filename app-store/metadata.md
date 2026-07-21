@@ -4,10 +4,10 @@
 
 | Field | Value |
 |---|---|
-| **App Name** | My Digital Closet |
-| **Subtitle** (30 chars max) | Style your wardrobe with AI |
-| **Bundle ID** | com.mydigitalcloset.app |
-| **SKU** | MYDIGITALCLOSET001 |
+| **App Name** | My Digital Cleaning |
+| **Subtitle** (30 chars max) | My Cleaning |
+| **Bundle ID** | com.mydigitalcleaning.app |
+| **SKU** | MYDIGITALCLEANING001 |
 | **Primary Category** | Lifestyle |
 | **Secondary Category** | Shopping |
 | **Content Rating** | 4+ |

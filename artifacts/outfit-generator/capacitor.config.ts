@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.mydigitalcleaning.app',
-  appName: 'My Digital Cleaning',
+  appName: 'My Cleaning',
   webDir: 'dist/public',
 
   // -------------------------------------------------------------------------
