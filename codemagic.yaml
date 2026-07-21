@@ -25,8 +25,8 @@ workflows:
       node: 22
       groups:
         - signing
-        - build_env
       vars:
+        VITE_API_BASE_URL: ""
         XCODE_SCHEME: App
         XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
         XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcodeproj/project.xcworkspace
