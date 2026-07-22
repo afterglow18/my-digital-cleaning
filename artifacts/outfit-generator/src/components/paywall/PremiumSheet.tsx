@@ -136,6 +136,29 @@ export function PremiumSheet({ onClose }: Props) {
         >
           Maybe Later
         </button>
+
+        {/* Legal links — required by Apple for paywalls */}
+        <div className="flex items-center justify-center gap-3">
+          <a
+            href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => { e.preventDefault(); window.open("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/", "_system"); }}
+            className="text-[10px] font-semibold text-black/35 underline underline-offset-2 hover:text-black/55 transition-colors"
+          >
+            Terms of Use
+          </a>
+          <span className="text-black/20 text-[10px]">·</span>
+          <a
+            href="https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => { e.preventDefault(); window.open("https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link", "_system"); }}
+            className="text-[10px] font-semibold text-black/35 underline underline-offset-2 hover:text-black/55 transition-colors"
+          >
+            Privacy Policy
+          </a>
+        </div>
       </div>
     </motion.div>
   );
