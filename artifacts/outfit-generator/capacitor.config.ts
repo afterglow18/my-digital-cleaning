@@ -15,6 +15,16 @@ const config: CapacitorConfig = {
     backgroundColor: '#F9F4EE',
     // Allow inline media playback (used for wardrobe image previews)
     allowsInlineMediaPlayback: true,
+    // iOS privacy usage descriptions — all three are required for the camera
+    // and photo-library flow; missing any one causes a TCC crash or silent refusal
+    infoPlist: {
+      NSCameraUsageDescription:
+        'My Cleaning uses the camera so you can photograph clothing items and add them to your wardrobe.',
+      NSPhotoLibraryUsageDescription:
+        'My Cleaning reads your photo library so you can choose existing photos of your clothing items.',
+      NSPhotoLibraryAddUsageDescription:
+        'My Cleaning saves photos you take with the camera to your photo library.',
+    },
   },
 
   plugins: {
