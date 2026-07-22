@@ -6,7 +6,7 @@
  *   2. BACKUP & RESTORE — export/import with warning text
  *   3. MY DIGITAL SUITCASE — app version + tagline
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, RefreshCw, Loader2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { exportBackup, importBackup, pickBackupFile } from "@/lib/backup";
@@ -87,6 +87,12 @@ export default function AccountPage() {
     isRestoring,
   } = useSubscription();
 
+  // Force-refresh subscription status every time the account page is opened,
+  // so a purchase made in another session (or a restored receipt) shows immediately.
+  useEffect(() => {
+    qc.invalidateQueries({ queryKey: ["revenuecat", "customer-info"] });
+  }, [qc]);
+
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const { isLockEnabled, setLockEnabled } = useBiometricLock();
@@ -146,8 +152,18 @@ export default function AccountPage() {
 
   const handleRestore = async () => {
     try {
-      await restore();
-      flash("success", "Purchases restored.");
+      const info = await restore();
+      const hasPremium =
+        info &&
+        typeof info === "object" &&
+        "entitlements" in info &&
+        (info as any).entitlements?.active?.["premium"] !== undefined;
+      flash(
+        "success",
+        hasPremium
+          ? "✓ Pro plan restored! Your account is now upgraded."
+          : "No previous purchases found on this Apple ID.",
+      );
     } catch (err) {
       flash("error", err instanceof Error ? err.message : "Could not restore");
     }

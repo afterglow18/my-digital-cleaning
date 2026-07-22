@@ -162,10 +162,14 @@ function useSubscriptionContext() {
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
-      // Seed the cache immediately with the fresh CustomerInfo RC just returned,
-      // then invalidate to schedule a background re-fetch for confirmation.
+      // Seed the cache immediately with the fresh CustomerInfo RC just returned.
+      // We delay the invalidation by 4 s so RC's backend has time to process
+      // the receipt before we refetch — otherwise the immediate refetch can
+      // return the pre-purchase "free" state and flash the badge back to Free.
       qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
-      qc.invalidateQueries({ queryKey: ["revenuecat"] });
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ["revenuecat"] });
+      }, 4000);
     },
   });
 
@@ -178,9 +182,11 @@ function useSubscriptionContext() {
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
-      // Same pattern: seed immediately, then confirm in background.
+      // Restore: seed immediately and refetch after a short delay.
       qc.setQueryData(CUSTOMER_INFO_KEY, customerInfo);
-      qc.invalidateQueries({ queryKey: ["revenuecat"] });
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ["revenuecat"] });
+      }, 2000);
     },
   });
 
