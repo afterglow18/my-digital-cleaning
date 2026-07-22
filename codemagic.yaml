@@ -36,6 +36,7 @@ workflows:
         PROFILE_NAME: My Digital Cleaning
         APP_STORE_CONNECT_ISSUER_ID: 66d4ce13-148d-4d6b-bab8-f1d0d8441a1e
         APP_STORE_CONNECT_KEY_IDENTIFIER: 3242PL6383
+        GIT_LFS_SKIP_SMUDGE: "1"
 
     scripts:
       - name: Install pnpm and dependencies
