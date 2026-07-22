@@ -8,7 +8,7 @@
  */
 import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { X, Check } from "lucide-react";
+import { X, Check, Loader2 } from "lucide-react";
 import { useEntitlements, PurchaseResult } from "@/hooks/useEntitlements";
 import type { PurchaseProduct } from "@/lib/entitlements";
 
@@ -25,21 +25,27 @@ const PRO_FEATURES = [
 ] as const;
 
 export function PremiumSheet({ onClose }: Props) {
-  const { purchase } = useEntitlements();
-  const [pending, setPending] = useState<PurchaseProduct | null>(null);
+  const { purchase, isLoading } = useEntitlements();
+  const [pending,  setPending]  = useState<PurchaseProduct | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handlePurchase = useCallback(
     async (product: PurchaseProduct) => {
-      if (pending) return;
+      if (pending || isLoading) return;
+      setErrorMsg(null);
       setPending(product);
       const result: PurchaseResult = await purchase(product);
       if (result === "success") {
         onClose();
+      } else if (result === "unavailable") {
+        setPending(null);
+        setErrorMsg("Could not load purchase options. Please try again or restart the app.");
       } else {
+        // "cancelled" — user dismissed the native sheet, no message needed
         setPending(null);
       }
     },
-    [pending, purchase, onClose],
+    [pending, isLoading, purchase, onClose],
   );
 
   return (
@@ -106,28 +112,36 @@ export function PremiumSheet({ onClose }: Props) {
         {/* Primary: Pro Stylist */}
         <button
           onClick={() => handlePurchase("premium")}
-          disabled={!!pending}
+          disabled={!!pending || isLoading}
           className="w-full py-4 rounded-xl flex items-center justify-center gap-2
                      font-display font-bold text-lg uppercase tracking-tight border-4 border-black
                      bg-black text-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
                      active:translate-x-1 active:translate-y-1 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         >
-          {pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
+          {(isLoading || pending === "premium") && <Loader2 className="w-4 h-4 animate-spin" />}
+          {isLoading ? "Loading…" : pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
         </button>
 
         {/* Secondary: Unlock Forever (if they just want unlimited without mannequin) */}
         <button
           onClick={() => handlePurchase("unlock")}
-          disabled={!!pending}
+          disabled={!!pending || isLoading}
           className="w-full py-3 rounded-xl flex items-center justify-center gap-1.5
                      font-display font-bold text-sm uppercase tracking-tight border-4 border-black
                      bg-primary shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
                      active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         >
+          {pending === "unlock" && <Loader2 className="w-4 h-4 animate-spin" />}
           {pending === "unlock" ? "Opening checkout…" : "Or get Unlock Forever – $4.99 (no mannequin)"}
         </button>
+
+        {errorMsg && (
+          <p className="text-xs text-red-600 font-semibold text-center px-2">
+            {errorMsg}
+          </p>
+        )}
 
         <button
           onClick={onClose}

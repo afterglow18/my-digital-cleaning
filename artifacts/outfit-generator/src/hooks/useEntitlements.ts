@@ -26,7 +26,7 @@ export type PurchaseProduct = "unlock" | "premium"; // kept for call-site compat
 export function setGlobalTier(_t: Tier): void { /* no-op */ }
 
 export function useEntitlements() {
-  const { isSubscribed, offerings, purchase: rcPurchase, isPurchasing } =
+  const { isSubscribed, offerings, purchase: rcPurchase, isPurchasing, isLoading } =
     useSubscription();
 
   // Both "unlock" and "premium" products now map to the RC "unlock" tier.
@@ -45,7 +45,13 @@ export function useEntitlements() {
 
   const purchase = useCallback(
     async (_product: PurchaseProduct): Promise<PurchaseResult> => {
-      const pkg = offerings?.current?.availablePackages?.[0];
+      const pkgs = offerings?.current?.availablePackages ?? [];
+      // Prefer the lifetime package; fall back to the first available
+      const pkg =
+        pkgs.find((p: any) => p.identifier === "$rc_lifetime") ??
+        pkgs.find((p: any) => p.identifier === "$rc_monthly") ??
+        pkgs[0];
+
       if (!pkg) return "unavailable";
 
       try {
@@ -64,5 +70,5 @@ export function useEntitlements() {
     [offerings, rcPurchase],
   );
 
-  return { tier, caps, canAddItem, canSaveOutfit, purchase, isPurchasing };
+  return { tier, caps, canAddItem, canSaveOutfit, purchase, isPurchasing, isLoading };
 }
