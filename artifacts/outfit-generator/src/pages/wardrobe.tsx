@@ -254,7 +254,7 @@ export default function WardrobePage() {
               color: "#1a0800",
               lineHeight: 1.1,
             }}>
-              MY DIGITAL SUITCASE
+              MY DIGITAL CLEANING
             </div>
           </div>
 

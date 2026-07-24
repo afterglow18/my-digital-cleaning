@@ -62,7 +62,7 @@ export async function exportBackup(): Promise<void> {
 
   const json = JSON.stringify(backup, null, 2);
   const dateStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const fileName = `my-digital-suitcase-backup-${dateStr}.json`;
+  const fileName = `my-digital-cleaning-backup-${dateStr}.json`;
 
   if (Capacitor.isNativePlatform()) {
     // Write to a temp file then share

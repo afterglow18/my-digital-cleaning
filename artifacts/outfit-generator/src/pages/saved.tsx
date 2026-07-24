@@ -428,7 +428,7 @@ export default function SavedPage() {
         )}
       </AnimatePresence>
 
-      {/* Suitcase picker for replacing a slot */}
+      {/* Wardrobe picker for replacing a slot */}
       <AnimatePresence>
         {replacingSlot !== null && (
           <WardrobePickerSheet

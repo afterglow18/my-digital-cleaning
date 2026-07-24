@@ -99,7 +99,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-40">
-              <span className="text-sm text-muted-foreground animate-pulse">Loading your suitcase…</span>
+              <span className="text-sm text-muted-foreground animate-pulse">Loading your cleaning bag…</span>
             </div>
           ) : items && items.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
@@ -143,7 +143,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
               <span className="text-4xl">💄</span>
               <p className="text-sm text-muted-foreground font-medium">
-                No {label.toLowerCase()} in your suitcase yet.
+                No {label.toLowerCase()} in your cleaning bag yet.
               </p>
             </div>
           )}
