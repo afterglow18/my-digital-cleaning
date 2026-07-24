@@ -217,7 +217,7 @@ export default function SavedPage() {
           ))}
         </div>
       ) : outfits && outfits.length > 0 ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
           {outfits.map((outfit) => {
             // Group items by category — first match per slot wins
             const bySlot = (outfit.items ?? []).reduce<Partial<Record<SlotKey, ClothingItem>>>(

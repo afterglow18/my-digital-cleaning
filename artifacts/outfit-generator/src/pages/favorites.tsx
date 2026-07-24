@@ -179,7 +179,7 @@ export default function FavoritesPage() {
       </header>
 
       {isLoading ? (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
           {[1,2,3,4,5,6,7,8].map((i) => (
             <div key={i} className="aspect-square bg-muted animate-pulse border-2 border-black rounded-xl" />
           ))}
@@ -191,7 +191,7 @@ export default function FavoritesPage() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={favorites.map((i) => i.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
               {favorites.map((item) => (
                 <SortableTile key={item.id} item={item} onTap={setDetailsItem} />
               ))}

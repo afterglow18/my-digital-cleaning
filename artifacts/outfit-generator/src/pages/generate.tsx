@@ -233,12 +233,14 @@ export default function GeneratePage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
+    // On phone: leave 90px for bottom nav. On iPad: sidebar takes no vertical space.
+    <div className="h-[calc(100dvh-90px)] md:h-[100dvh]">
     <div
       ref={containerRef}
       style={{
         position: "relative",
         width: "100%",
-        height: `calc(100dvh - ${NAV_H}px)`,
+        height: "100%",
         overflow: "hidden",
         background: "#C8B9A2",
       }}
@@ -663,6 +665,7 @@ export default function GeneratePage() {
           </>
         );
       })()}
+    </div>
     </div>
   );
 }
