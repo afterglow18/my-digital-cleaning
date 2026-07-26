@@ -2,11 +2,18 @@
  * ItemDetailsSheet — full-screen overlay showing a clothing item's details.
  * Every field is optional and editable. A "Save" button appears only when
  * the form is dirty. Delete is always available.
+ *
+ * "Clean Up Photo" flow:
+ *   1. User taps the button — bg removal runs on-device (WASM, no API key).
+ *   2. When ready a compare overlay slides up: Original vs Cleaned side-by-side.
+ *   3. User taps a card (pink ring + checkmark) then taps the matching save button.
+ *   4. Chosen data URL is written to liveImagePath immediately (no flash), and
+ *      the DB mutation fires in the background.
  */
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2,
+  X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2, Check,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -28,17 +35,10 @@ const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Eve
 const CATEGORY_OPTIONS  = ["outfits", "beauty", "toiletries", "essentials"];
 
 function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
+  label, value, onChange, placeholder, type = "text",
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; type?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -59,15 +59,9 @@ function Field({
 }
 
 function SelectField({
-  label,
-  value,
-  onChange,
-  options,
+  label, value, onChange, options,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
+  label: string; value: string; onChange: (v: string) => void; options: string[];
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -83,9 +77,7 @@ function SelectField({
                      cursor-pointer"
         >
           {options.map((o) => (
-            <option key={o} value={o}>
-              {o || `— ${label} —`}
-            </option>
+            <option key={o} value={o}>{o || `— ${label} —`}</option>
           ))}
         </select>
         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-black/40" />
@@ -94,26 +86,162 @@ function SelectField({
   );
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Compare Overlay ───────────────────────────────────────────────────────────
+
+interface CompareOverlayProps {
+  originalUrl: string;
+  cleanedUrl:  string;
+  onConfirm:   (choice: "original" | "cleaned") => void;
+  onDismiss:   () => void;
+}
+
+function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: CompareOverlayProps) {
+  const [selected, setSelected] = useState<"original" | "cleaned">("cleaned");
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: "100%" }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: "100%" }}
+      transition={{ type: "spring", damping: 28, stiffness: 240 }}
+      className="fixed inset-0 z-[75] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+      >
+        <div>
+          <h2 className="font-display font-bold text-xl uppercase tracking-tight leading-tight">
+            Choose Photo
+          </h2>
+          <p className="text-xs text-black/45 font-medium mt-0.5">
+            Tap to select, then save.
+          </p>
+        </div>
+        <button
+          onClick={onDismiss}
+          className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
+                     bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                     active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Cards */}
+      <div className="flex-1 flex flex-col justify-center px-5 gap-4">
+        <div className="flex gap-3">
+
+          {/* Original */}
+          <button
+            onClick={() => setSelected("original")}
+            className={`flex-1 flex flex-col overflow-hidden rounded-2xl border-4 transition-all
+              ${selected === "original"
+                ? "border-[#E91E8C] shadow-[4px_4px_0px_0px_rgba(233,30,140,0.5)] scale-[1.02]"
+                : "border-black/20 opacity-60"}`}
+          >
+            <div className="w-full aspect-square bg-white overflow-hidden relative">
+              <img
+                src={getImageUrl(originalUrl)!}
+                alt="Original"
+                className="w-full h-full object-cover"
+              />
+              {selected === "original" && (
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E91E8C]
+                                flex items-center justify-center shadow-md">
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                </div>
+              )}
+            </div>
+            <div className={`px-2 py-2 text-center border-t-4
+              ${selected === "original" ? "border-[#E91E8C] bg-pink-50" : "border-black/20 bg-white"}`}>
+              <span className="font-display font-bold text-xs uppercase tracking-tight">
+                Original
+              </span>
+            </div>
+          </button>
+
+          {/* Cleaned */}
+          <button
+            onClick={() => setSelected("cleaned")}
+            className={`flex-1 flex flex-col overflow-hidden rounded-2xl border-4 transition-all
+              ${selected === "cleaned"
+                ? "border-[#E91E8C] shadow-[4px_4px_0px_0px_rgba(233,30,140,0.5)] scale-[1.02]"
+                : "border-black/20 opacity-60"}`}
+          >
+            {/* Checkerboard shows PNG transparency */}
+            <div
+              className="w-full aspect-square overflow-hidden relative"
+              style={{
+                background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 16px 16px",
+              }}
+            >
+              <img
+                src={getImageUrl(cleanedUrl)!}
+                alt="Cleaned"
+                className="w-full h-full object-contain"
+              />
+              {selected === "cleaned" && (
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E91E8C]
+                                flex items-center justify-center shadow-md">
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                </div>
+              )}
+            </div>
+            <div className={`px-2 py-2 text-center border-t-4
+              ${selected === "cleaned" ? "border-[#E91E8C] bg-pink-50" : "border-black/20 bg-white"}`}>
+              <span className="font-display font-bold text-xs uppercase tracking-tight">
+                Cleaned ✨
+              </span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+      {/* Footer buttons */}
+      <div
+        className="flex-shrink-0 px-5 pb-6 flex flex-col gap-2 bg-[#f9f4ee]"
+        style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <button
+          onClick={() => onConfirm("cleaned")}
+          className={`w-full py-4 border-4 rounded-2xl font-display font-bold text-sm uppercase
+            tracking-tight transition-all
+            ${selected === "cleaned"
+              ? "border-black bg-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+              : "border-black/25 bg-white text-black/40"}`}
+        >
+          Save Cleaned Version ✨
+        </button>
+        <button
+          onClick={() => onConfirm("original")}
+          className={`w-full py-3.5 border-4 rounded-2xl font-display font-bold text-sm uppercase
+            tracking-tight transition-all
+            ${selected === "original"
+              ? "border-black bg-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+              : "border-black/25 bg-white text-black/50"}`}
+        >
+          Keep Original
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 interface ItemDetailsSheetProps {
-  item: ClothingItem | null;
-  onClose: () => void;
+  item:      ClothingItem | null;
+  onClose:   () => void;
   onDeleted?: () => void;
 }
 
 interface FormState {
-  name: string;
-  brand: string;
-  color: string;
-  size: string;
-  season: string;
-  occasion: string;
-  purchasePrice: string;
-  purchaseDate: string;
-  notes: string;
-  isFavorite: boolean;
-  category: string;
+  name: string; brand: string; color: string; size: string;
+  season: string; occasion: string; purchasePrice: string;
+  purchaseDate: string; notes: string; isFavorite: boolean; category: string;
 }
 
 function toForm(item: ClothingItem): FormState {
@@ -149,84 +277,102 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
 }
 
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]           = useState<FormState | null>(null);
+  const [form,             setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Background removal on existing saved image
-  const [bgRemoving,    setBgRemoving]    = useState(false);
-  const [bgError,       setBgError]       = useState<string | null>(null);
-  /** Shadows item.imageObjectPath after a successful in-place removal */
+  // "Clean Up Photo" state
+  const [bgProcessing,   setBgProcessing]   = useState(false);
+  const [bgError,        setBgError]        = useState<string | null>(null);
+  /**
+   * Slides up when bg removal finishes — holds both URLs for the compare UI.
+   * Null while the overlay is closed.
+   */
+  const [compareData, setCompareData] = useState<{
+    originalUrl: string;
+    cleanedUrl:  string;
+  } | null>(null);
+  /**
+   * Shadows item.imageObjectPath after the user confirms a choice.
+   * Set optimistically so the photo updates instantly, before the DB write lands.
+   */
   const [liveImagePath, setLiveImagePath] = useState<string | null>(null);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
 
-  // Reset form whenever item changes
+  // Reset everything when the viewed item changes
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
-    setBgRemoving(false);
+    setBgProcessing(false);
     setBgError(null);
+    setCompareData(null);
     setLiveImagePath(null);
   }, [item?.id]);
 
-  /** Remove background from the item's current photo and save it in-place. */
-  const handleRemoveBg = async () => {
+  // ── "Clean Up Photo" — runs bg removal, then opens compare overlay ─────────
+  const handleCleanUpPhoto = async () => {
     const srcPath = liveImagePath ?? item?.imageObjectPath;
     if (!srcPath || !item) return;
-    setBgRemoving(true);
+    setBgProcessing(true);
     setBgError(null);
     try {
-      // Convert existing data URL → Blob so processClothingImage can read it
+      // Convert existing data URL → Blob for processClothingImage
       const res  = await fetch(srcPath);
       const blob = await res.blob();
-      // bg removal + tight crop
+      // bg removal + tight centre crop (pure WASM, on-device)
       const cleaned = await processClothingImage(blob);
-      // Preserve PNG transparency via FileReader
-      const dataUrl = await new Promise<string>((resolve, reject) => {
+      // Read result as a data URL preserving PNG transparency
+      const cleanedUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload  = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(cleaned);
       });
-      await new Promise<void>((resolve, reject) => {
-        updateItem.mutate(
-          { id: item.id, data: { imageObjectPath: dataUrl } },
-          {
-            onSuccess: () => {
-              queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-              queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-              queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
-              resolve();
-            },
-            onError: reject,
-          },
-        );
-      });
-      setLiveImagePath(dataUrl);
+      // Open compare overlay
+      setCompareData({ originalUrl: srcPath, cleanedUrl });
     } catch (err) {
       console.error("Background removal failed:", err);
       setBgError("Could not remove background. Please try again.");
     } finally {
-      setBgRemoving(false);
+      setBgProcessing(false);
     }
   };
 
-  if (!item || !form) return null;
+  // ── User confirmed a choice in the compare overlay ────────────────────────
+  const handleCompareConfirm = (choice: "original" | "cleaned") => {
+    if (!compareData || !item) return;
+    const chosen = choice === "cleaned" ? compareData.cleanedUrl : compareData.originalUrl;
 
-  const dirty = isDirty(form, item);
+    // 1. Optimistic update — photo changes on screen immediately, no flash
+    setLiveImagePath(chosen);
+    setCompareData(null);
 
-  const patch = (key: keyof FormState) => (value: string | boolean) =>
-    setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+    // 2. DB write fires in the background — UI doesn't wait
+    updateItem.mutate(
+      { id: item.id, data: { imageObjectPath: chosen } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+        },
+        onError: (err) => {
+          // Silently log — liveImagePath is already updated so UX isn't disrupted
+          console.error("Failed to persist image choice:", err);
+        },
+      },
+    );
+  };
 
+  // ── Form field save ────────────────────────────────────────────────────────
   const handleSave = () => {
+    if (!item || !form) return;
     updateItem.mutate(
       {
         id: item.id,
         data: {
-          // Always send every editable field so the backend can clear it when empty.
-          // Backend converts "" → null in DB.
           name:          form.name.trim() || item.name,
           brand:         form.brand.trim(),
           color:         form.color.trim(),
@@ -247,11 +393,12 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
           onClose();
         },
-      }
+      },
     );
   };
 
   const handleDelete = () => {
+    if (!item) return;
     deleteItem.mutate(
       { id: item.id },
       {
@@ -262,235 +409,248 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           onDeleted?.();
           onClose();
         },
-      }
+      },
     );
   };
 
+  const patch = (key: keyof FormState) => (value: string | boolean) =>
+    setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+
+  if (!item || !form) return null;
+
+  const dirty         = isDirty(form, item);
+  const displayImage  = liveImagePath ?? item.imageObjectPath;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: "100%" }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: "100%" }}
-      transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
-    >
-      {/* ── Header ── */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4
-                      bg-white border-b-2 border-black flex-shrink-0"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}>
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Item Details
-        </h2>
-        <div className="flex items-center gap-2">
-          {/* Favourite toggle — saves instantly */}
-          <button
-            onClick={() => {
-              const next = !form.isFavorite;
-              patch("isFavorite")(next);
-              updateItem.mutate(
-                { id: item.id, data: { isFavorite: next } },
-                {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: "100%" }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 240 }}
+        className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
+      >
+        {/* ── Header ── */}
+        <div
+          className="sticky top-0 z-10 flex items-center justify-between px-4
+                     bg-white border-b-2 border-black flex-shrink-0"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+        >
+          <h2 className="font-display font-bold text-xl uppercase tracking-tight">
+            Item Details
+          </h2>
+          <div className="flex items-center gap-2">
+            {/* Favourite toggle */}
+            <button
+              onClick={() => {
+                const next = !form.isFavorite;
+                patch("isFavorite")(next);
+                updateItem.mutate(
+                  { id: item.id, data: { isFavorite: next } },
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+                    },
                   },
-                }
-              );
-            }}
-            className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
-                        ${form.isFavorite
-                          ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
-            title="Favourite"
-          >
-            <Heart
-              className="w-4 h-4"
-              fill={form.isFavorite ? "white" : "none"}
-              stroke={form.isFavorite ? "white" : "currentColor"}
-            />
-          </button>
-          {/* Close */}
-          <button
-            onClick={onClose}
-            className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                       bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Photo + Remove-bg button ── */}
-      {item.imageObjectPath && (
-        <>
-          <div
-            className="w-full h-52 flex-shrink-0 relative"
-            style={{
-              backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-              backgroundSize: "16px 16px",
-            }}
-          >
-            <img
-              src={getImageUrl(liveImagePath ?? item.imageObjectPath)!}
-              alt={item.name}
-              className="w-full h-full object-contain"
-            />
-            {/* Dim overlay while processing */}
-            {bgRemoving && (
-              <div className="absolute inset-0 bg-white/60 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-black/50" strokeWidth={1.5} />
-                <span className="text-xs font-medium text-black/50">Removing background…</span>
-              </div>
-            )}
-          </div>
-
-          {/* Action row below photo */}
-          <div className="flex-shrink-0 border-b-2 border-black bg-white px-4 py-2.5 flex items-center gap-3">
-            <button
-              onClick={handleRemoveBg}
-              disabled={bgRemoving}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-black text-xs font-bold
-                uppercase tracking-tight transition-all
-                ${bgRemoving
-                  ? "bg-gray-100 text-black/30 cursor-not-allowed"
-                  : "bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
+                );
+              }}
+              className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
+                          ${form.isFavorite
+                            ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
+              title="Favourite"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              {bgRemoving ? "Processing…" : liveImagePath ? "Remove Again ✨" : "Remove Background ✨"}
+              <Heart
+                className="w-4 h-4"
+                fill={form.isFavorite ? "white" : "none"}
+                stroke={form.isFavorite ? "white" : "currentColor"}
+              />
             </button>
-            {bgError && (
-              <span className="text-xs text-red-600 font-medium flex-1">{bgError}</span>
-            )}
-            {!bgError && liveImagePath && !bgRemoving && (
-              <span className="text-xs text-green-700 font-medium">Background removed ✓</span>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* ── Form ── */}
-      <div className="flex-1 px-4 py-5 flex flex-col gap-4">
-
-        {/* Name */}
-        <Field
-          label="Item Name"
-          value={form.name}
-          onChange={patch("name") as (v: string) => void}
-          placeholder="e.g. White Linen Shirt"
-        />
-
-        {/* Brand + Color */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
-          <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
-        </div>
-
-        {/* Size */}
-        <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
-
-        {/* Season + Occasion */}
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
-          <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
-        </div>
-
-        {/* Price + Date */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
-          <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
-        </div>
-
-        {/* Notes */}
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-            Notes
-          </label>
-          <textarea
-            value={form.notes}
-            onChange={(e) => patch("notes")(e.target.value)}
-            placeholder="Anything worth remembering…"
-            rows={3}
-            className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
-                       bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
-                       placeholder:font-normal placeholder:text-black/25"
-          />
-        </div>
-
-        {/* Category (editable) + Times Worn (read-only) */}
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField
-            label="Category"
-            value={form.category}
-            onChange={patch("category") as (v: string) => void}
-            options={CATEGORY_OPTIONS}
-          />
-          <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
-            <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
-              {item.timesWorn ?? 0}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── Footer actions ── */}
-      <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
-
-        {/* Save (only when dirty) */}
-        <AnimatePresence>
-          {dirty && (
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              onClick={handleSave}
-              disabled={updateItem.isPending}
-              className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
-            >
-              <Save className="w-4 h-4" />
-              {updateItem.isPending ? "Saving…" : "Save Changes"}
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Delete */}
-        {!showDeleteConfirm ? (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
-                       font-bold uppercase border-2 border-black/20 text-black/35
-                       hover:border-red-500 hover:text-red-600 transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete from Cleaning Forever
-          </button>
-        ) : (
-          <div className="flex gap-2">
+            {/* Close */}
             <button
-              onClick={() => setShowDeleteConfirm(false)}
-              className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
-                         shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+              onClick={onClose}
+              className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
+                         bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                          active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
             >
-              Cancel
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleteItem.isPending}
-              className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
-                         bg-red-500 text-white
-                         shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
-                         active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
-                         disabled:opacity-50"
-            >
-              {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+              <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* ── Photo ── */}
+        {displayImage && (
+          <>
+            <div
+              className="w-full h-52 flex-shrink-0 relative"
+              style={{
+                backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                backgroundSize: "16px 16px",
+              }}
+            >
+              <img
+                src={getImageUrl(displayImage)!}
+                alt={item.name}
+                className="w-full h-full object-contain"
+              />
+              {/* Spinner overlay while bg removal is running */}
+              {bgProcessing && (
+                <div className="absolute inset-0 bg-white/65 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-9 h-9 animate-spin text-black/50" strokeWidth={1.5} />
+                  <span className="text-xs font-medium text-black/50">Analysing photo…</span>
+                </div>
+              )}
+            </div>
+
+            {/* "Clean Up Photo" action row */}
+            <div className="flex-shrink-0 border-b-2 border-black bg-white px-4 py-2.5 flex items-center gap-3">
+              <button
+                onClick={handleCleanUpPhoto}
+                disabled={bgProcessing}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-black
+                  text-xs font-bold uppercase tracking-tight transition-all
+                  ${bgProcessing
+                    ? "bg-gray-100 text-black/30 cursor-not-allowed"
+                    : "bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {bgProcessing ? "Processing…" : "Clean Up Photo ✨"}
+              </button>
+              {bgError && (
+                <span className="text-xs text-red-600 font-medium flex-1">{bgError}</span>
+              )}
+              {!bgError && liveImagePath && !bgProcessing && (
+                <span className="text-xs text-green-700 font-medium">Photo updated ✓</span>
+              )}
+            </div>
+          </>
         )}
-      </div>
-    </motion.div>
+
+        {/* ── Form ── */}
+        <div className="flex-1 px-4 py-5 flex flex-col gap-4">
+
+          <Field
+            label="Item Name"
+            value={form.name}
+            onChange={patch("name") as (v: string) => void}
+            placeholder="e.g. White Linen Shirt"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
+            <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
+          </div>
+
+          <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
+            <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
+            <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => patch("notes")(e.target.value)}
+              placeholder="Anything worth remembering…"
+              rows={3}
+              className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
+                         bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
+                         placeholder:font-normal placeholder:text-black/25"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField
+              label="Category"
+              value={form.category}
+              onChange={patch("category") as (v: string) => void}
+              options={CATEGORY_OPTIONS}
+            />
+            <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
+              <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
+                {item.timesWorn ?? 0}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Footer actions ── */}
+        <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
+
+          <AnimatePresence>
+            {dirty && (
+              <motion.button
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                onClick={handleSave}
+                disabled={updateItem.isPending}
+                className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
+              >
+                <Save className="w-4 h-4" />
+                {updateItem.isPending ? "Saving…" : "Save Changes"}
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
+                         font-bold uppercase border-2 border-black/20 text-black/35
+                         hover:border-red-500 hover:text-red-600 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete from Cleaning Forever
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteItem.isPending}
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
+                           bg-red-500 text-white
+                           shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
+                           disabled:opacity-50"
+              >
+                {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── Compare Overlay (slides up above ItemDetailsSheet) ── */}
+      <AnimatePresence>
+        {compareData && (
+          <CompareOverlay
+            originalUrl={compareData.originalUrl}
+            cleanedUrl={compareData.cleanedUrl}
+            onConfirm={handleCompareConfirm}
+            onDismiss={() => setCompareData(null)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
