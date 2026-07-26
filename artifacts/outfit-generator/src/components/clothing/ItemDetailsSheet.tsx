@@ -10,7 +10,7 @@
  *   4. Chosen data URL is written to liveImagePath immediately (no flash), and
  *      the DB mutation fires in the background.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2, Check,
@@ -283,6 +283,9 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   // "Clean Up Photo" state
   const [bgProcessing,   setBgProcessing]   = useState(false);
   const [bgError,        setBgError]        = useState<string | null>(null);
+  /** Set to true when the user taps "Keep Original" mid-processing — the WASM
+   *  result is discarded when it eventually arrives. */
+  const cancelledRef = useRef(false);
   /**
    * Slides up when bg removal finishes — holds both URLs for the compare UI.
    * Null while the overlay is closed.
@@ -309,12 +312,14 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     setBgError(null);
     setCompareData(null);
     setLiveImagePath(null);
+    cancelledRef.current = false;
   }, [item?.id]);
 
   // ── "Clean Up Photo" — runs bg removal, then opens compare overlay ─────────
   const handleCleanUpPhoto = async () => {
     const srcPath = liveImagePath ?? item?.imageObjectPath;
     if (!srcPath || !item) return;
+    cancelledRef.current = false;
     setBgProcessing(true);
     setBgError(null);
     try {
@@ -330,14 +335,24 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         reader.onerror = reject;
         reader.readAsDataURL(cleaned);
       });
+      // Discard result if user already chose to keep original mid-processing
+      if (cancelledRef.current) return;
       // Open compare overlay
       setCompareData({ originalUrl: srcPath, cleanedUrl });
     } catch (err) {
+      if (cancelledRef.current) return; // user cancelled — don't show error
       console.error("Background removal failed:", err);
       setBgError("Could not remove background. Please try again.");
     } finally {
       setBgProcessing(false);
     }
+  };
+
+  // ── User chose "Keep Original" while cleaning was still running ───────────
+  const handleCancelCleaning = () => {
+    cancelledRef.current = true;
+    setBgProcessing(false);
+    setBgError(null);
   };
 
   // ── User confirmed a choice in the compare overlay ────────────────────────
@@ -497,9 +512,19 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               />
               {/* Spinner overlay while bg removal is running */}
               {bgProcessing && (
-                <div className="absolute inset-0 bg-white/65 flex flex-col items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-white/70 flex flex-col items-center justify-center gap-3">
                   <Loader2 className="w-9 h-9 animate-spin text-black/50" strokeWidth={1.5} />
                   <span className="text-xs font-medium text-black/50">Analysing photo…</span>
+                  <button
+                    onClick={handleCancelCleaning}
+                    className="mt-1 px-3 py-1.5 rounded-lg border-2 border-black bg-white
+                               text-xs font-bold uppercase tracking-tight
+                               shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                               active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+                               transition-all"
+                  >
+                    Keep Original
+                  </button>
                 </div>
               )}
             </div>
