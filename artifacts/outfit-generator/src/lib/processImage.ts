@@ -25,11 +25,52 @@
  * NOTE: The library's resources.json ships empty, so the built-in progress
  * callback never fires with total > 0.  Callers should drive their own
  * progress UI (e.g. a decelerating ramp) independently.
+ *
+ * THREADING FIX (iOS / WKWebView):
+ *   @imgly/background-removal forces ort.env.wasm.proxy = false internally,
+ *   which keeps ONNX inference on the main JS thread and freezes the UI.
+ *   We lock the property via Object.defineProperty so imgly's write is
+ *   silently ignored and inference runs in a sub-worker instead.
+ *   numThreads = 1 avoids the SharedArrayBuffer crash on iOS Safari.
+ *   onnxruntime-web is imported dynamically (not at module parse time) to
+ *   prevent Vite pre-bundling from triggering a full page reload mid-session.
  */
 import { removeBackground } from "@imgly/background-removal";
 
 const CDN_VERSION = "1.7.0";
 const PUBLIC_PATH = `https://cdn.jsdelivr.net/npm/@imgly/background-removal@${CDN_VERSION}/dist/web/`;
+
+// ── ONNX Runtime Web worker-proxy fix ────────────────────────────────────────
+// @imgly/background-removal internally does `ort.env.wasm.proxy = false` right
+// before creating its inference session (it only enables the proxy when WebGPU
+// is available, which WKWebView on iOS doesn't support).  That assignment keeps
+// inference on the main thread and freezes the UI for 5–30 s.
+//
+// Fix: use Object.defineProperty with a no-op setter so imgly's write is
+// silently ignored and the value stays true → inference runs in a sub-worker.
+// numThreads = 1 avoids the SharedArrayBuffer WASM-threading crash on iOS.
+//
+// onnxruntime-web is imported dynamically (not at module parse time) to
+// prevent Vite from pre-bundling it, which caused a full page reload that
+// corrupted React's internal dispatcher on first use.
+
+let _ortReady: Promise<void> | null = null;
+
+function ensureOrtConfigured(): Promise<void> {
+  if (!_ortReady) {
+    _ortReady = (async () => {
+      // @ts-ignore — types.d.ts exists but isn't wired through package.json "exports"
+      const ort = await import("onnxruntime-web");
+      Object.defineProperty(ort.env.wasm, "proxy", {
+        get: () => true,
+        set: () => {},        // blocks imgly from setting it back to false
+        configurable: true,  // allows re-definition if ort is reloaded
+      });
+      ort.env.wasm.numThreads = 1; // iOS Safari has no SharedArrayBuffer
+    })();
+  }
+  return _ortReady;
+}
 
 export type ProgressCallback = (percent: number) => void;
 
@@ -95,6 +136,10 @@ export async function processClothingImage(
   timeoutMs = 90_000,
 ): Promise<Blob> {
   const run = async () => {
+    // Ensure ONNX runtime is configured for worker-proxy mode before imgly
+    // gets a chance to force proxy = false on the main thread.
+    await ensureOrtConfigured();
+
     const bgFree = await removeBackground(input, {
       publicPath: PUBLIC_PATH,
       model: "isnet_quint8",
