@@ -1,9 +1,12 @@
 /**
  * QuickAddSheet
  *
- * Upload flow:
- *   pick ──(single file)──► preview (Original | Cleaned ✨ side-by-side) ──(save)──► uploading ──► close
- *        ──(multi files)──► uploading ──► close   (no comparison for bulk)
+ * Upload flow (single OR multi-file — same path):
+ *   pick ──(files chosen)──► preview (Original | Cleaned ✨ comparison for each file)
+ *                            ──(save)──► next file preview OR close
+ *
+ * For multi-file selections the queue advances automatically after each Save;
+ * the user sees "Photo X of Y" in the header.
  */
 import React, { useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +33,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
 type Phase =
   | "pick"       // two-button landing screen
   | "preview"    // side-by-side Original | Cleaned comparison
-  | "uploading"; // encoding + saving to DB
+  | "uploading"; // saving current photo to DB
 
 interface UploadProgress {
   current: number;
@@ -40,8 +43,8 @@ interface UploadProgress {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /**
- * Compress to JPEG ≤ 800 px and return a data URL for DB storage.
- * Used for originals (no transparency needed).
+ * Compress to JPEG ≤ 800 px and return a data URL.
+ * Used for originals (no transparency).
  */
 async function blobToJpegDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -62,7 +65,7 @@ async function blobToJpegDataUrl(blob: Blob): Promise<string> {
 }
 
 /**
- * Convert a Blob to a data URL via FileReader.
+ * Read a Blob directly to a data URL (FileReader).
  * Preserves PNG transparency — used when storing the cleaned version.
  */
 function blobToRawDataUrl(blob: Blob): Promise<string> {
@@ -102,9 +105,18 @@ interface Props {
 }
 
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
-  const [phase,    setPhase]   = useState<Phase>("pick");
+  const [phase,    setPhase]    = useState<Phase>("pick");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
+
+  // ── Queue state (multi-file support) ──────────────────────────────────────
+  /** All files selected in this session */
+  const fileQueueRef   = useRef<File[]>([]);
+  /** How many have already been saved */
+  const savedCountRef  = useRef(0);
+  /** Index of the file currently shown in the preview */
+  const [queueIndex,   setQueueIndex]   = useState(0);
+  const [queueTotal,   setQueueTotal]   = useState(1);
 
   // ── Comparison state ───────────────────────────────────────────────────────
   const [originalBlob, setOriginalBlob] = useState<Blob | null>(null);
@@ -129,33 +141,42 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  /** Revoke any open object URLs and reset all comparison state. */
-  const resetComparison = useCallback((origUrl: string | null, cleanUrl: string | null) => {
-    bgGenRef.current += 1;        // cancel any in-flight removal
-    setBgProcessing(false);       // MUST reset — close can happen mid-removal
-    if (origUrl)  URL.revokeObjectURL(origUrl);
-    if (cleanUrl) URL.revokeObjectURL(cleanUrl);
-    setOriginalBlob(null);
-    setOriginalUrl(null);
-    setCleanedBlob(null);
-    setCleanedUrl(null);
+  /** Revoke open object URLs and reset comparison state. Call before showing next photo. */
+  const clearComparison = useCallback(() => {
+    bgGenRef.current += 1;   // cancel any in-flight removal
+    setBgProcessing(false);  // MUST reset — close can happen mid-removal
+    setOriginalBlob(prev => { if (prev) URL.revokeObjectURL(URL.createObjectURL(prev)); return null; });
+    setOriginalUrl(prev  => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setCleanedBlob(prev  => { if (prev) URL.revokeObjectURL(URL.createObjectURL(prev)); return null; });
+    setCleanedUrl(prev   => { if (prev) URL.revokeObjectURL(prev); return null; });
     setBgFailed(false);
     setSelected("original");
   }, []);
 
-  // ── Reset / close ──────────────────────────────────────────────────────────
+  // ── Reset everything and close ─────────────────────────────────────────────
   const handleClose = useCallback(() => {
-    resetComparison(originalUrl, cleanedUrl);
+    bgGenRef.current += 1;
+    setBgProcessing(false);
+    setOriginalUrl(prev  => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setCleanedUrl(prev   => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setOriginalBlob(null);
+    setCleanedBlob(null);
+    setBgFailed(false);
+    setSelected("original");
+    fileQueueRef.current  = [];
+    savedCountRef.current = 0;
+    setQueueIndex(0);
+    setQueueTotal(1);
     setPhase("pick");
     setErrorMsg(null);
     onOpenChange(false);
-  }, [onOpenChange, originalUrl, cleanedUrl, resetComparison]);
+  }, [onOpenChange]);
 
   // ── Save a blob into the DB ────────────────────────────────────────────────
   const saveBlobItem = useCallback(async (
     blob:      Blob,
-    itemIndex: number,
-    asPng:     boolean,   // true → preserve PNG (transparent); false → JPEG compress
+    itemIndex: number,   // existingCount + position in session
+    asPng:     boolean,  // true → raw PNG (transparent); false → JPEG compress
   ): Promise<boolean> => {
     try {
       const dataUrl  = asPng
@@ -185,20 +206,19 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
   }, [category, createItem, queryClient, onCreated]);
 
-  // ── Single-file path → show comparison UI ─────────────────────────────────
-  const handleSingleFile = useCallback(async (file: File) => {
-    setErrorMsg(null);
-
+  // ── Show comparison for a single file ─────────────────────────────────────
+  const showComparison = useCallback(async (file: File) => {
     // 1. Encode to normalised PNG for display + fallback storage
     let png: Blob;
     try {
       png = await encodeToPng(file);
     } catch {
       setErrorMsg("Could not read photo. Please try again.");
+      setPhase("pick");
       return;
     }
 
-    // 2. Show original immediately and switch to preview phase
+    // 2. Show original immediately and switch to preview
     const objUrl = URL.createObjectURL(png);
     setOriginalBlob(png);
     setOriginalUrl(objUrl);
@@ -208,12 +228,11 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     setSelected("original");
     setPhase("preview");
 
-    // 3. Background removal — generation guard prevents stale results
+    // 3. Background removal with generation guard
     const myGen = ++bgGenRef.current;
     setBgProcessing(true);
     try {
-      // processClothingImage: bg removal + tight crop/square PNG
-      const cleaned = await processClothingImage(file);
+      const cleaned = await processClothingImage(file);  // bg removal + tight crop/square PNG
       if (bgGenRef.current !== myGen) return;
       const cleanedObjUrl = URL.createObjectURL(cleaned);
       if (bgGenRef.current !== myGen) { URL.revokeObjectURL(cleanedObjUrl); return; }
@@ -229,71 +248,89 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
   }, []);
 
-  // ── Save from comparison preview ───────────────────────────────────────────
-  const handleSave = useCallback(async () => {
-    const useClean = selected === "cleaned" && cleanedBlob != null;
-    const blob     = useClean ? cleanedBlob! : originalBlob!;
+  // ── Save current comparison, then advance queue ────────────────────────────
+  const handleSave = useCallback(async (
+    curOriginalBlob: Blob | null,
+    curCleanedBlob:  Blob | null,
+    curSelected:     "original" | "cleaned",
+    curOriginalUrl:  string | null,
+    curCleanedUrl:   string | null,
+    curQueueIndex:   number,
+  ) => {
+    const useClean = curSelected === "cleaned" && curCleanedBlob != null;
+    const blob     = useClean ? curCleanedBlob! : curOriginalBlob!;
+
     setPhase("uploading");
-    setProgress({ current: 1, total: 1 });
-    const ok = await saveBlobItem(blob, existingCount, useClean);
-    setProgress(null);
+    setProgress({ current: curQueueIndex + 1, total: fileQueueRef.current.length });
+
+    const ok = await saveBlobItem(blob, existingCount + savedCountRef.current, useClean);
+
     if (ok) {
-      // Revoke URLs before closing
-      resetComparison(originalUrl, cleanedUrl);
-      setPhase("pick");
-      setErrorMsg(null);
-      onOpenChange(false);
+      savedCountRef.current += 1;
+
+      // Revoke current comparison URLs
+      if (curOriginalUrl) URL.revokeObjectURL(curOriginalUrl);
+      if (curCleanedUrl)  URL.revokeObjectURL(curCleanedUrl);
+      setOriginalBlob(null);
+      setOriginalUrl(null);
+      setCleanedBlob(null);
+      setCleanedUrl(null);
+      setBgFailed(false);
+      setSelected("original");
+
+      const nextIndex = curQueueIndex + 1;
+      if (nextIndex < fileQueueRef.current.length) {
+        // More photos to review — advance queue
+        setQueueIndex(nextIndex);
+        setProgress(null);
+        showComparison(fileQueueRef.current[nextIndex]);
+      } else {
+        // All done
+        setProgress(null);
+        fileQueueRef.current  = [];
+        savedCountRef.current = 0;
+        setQueueIndex(0);
+        setQueueTotal(1);
+        setPhase("pick");
+        setErrorMsg(null);
+        onOpenChange(false);
+      }
     } else {
+      setProgress(null);
       setErrorMsg("Could not save photo. Please try again.");
       setPhase("preview");
     }
-  }, [selected, cleanedBlob, originalBlob, saveBlobItem, existingCount,
-      resetComparison, originalUrl, cleanedUrl, onOpenChange]);
-
-  // ── Multi-file path (no comparison) ───────────────────────────────────────
-  const handleMultiFiles = useCallback(async (files: File[]) => {
-    setErrorMsg(null);
-    setPhase("uploading");
-    setProgress({ current: 0, total: files.length });
-
-    let failed = 0;
-    for (let i = 0; i < files.length; i++) {
-      setProgress({ current: i + 1, total: files.length });
-      let png: Blob;
-      try {
-        png = await encodeToPng(files[i]);
-      } catch {
-        failed++;
-        continue;
-      }
-      const ok = await saveBlobItem(png, existingCount + i, false);
-      if (!ok) failed++;
-    }
-
-    setProgress(null);
-    if (failed > 0) {
-      setErrorMsg(`${failed} photo${failed > 1 ? "s" : ""} could not be saved. Please try again.`);
-      setPhase("pick");
-    } else {
-      onOpenChange(false);
-    }
-  }, [saveBlobItem, existingCount, onOpenChange]);
+  }, [saveBlobItem, existingCount, showComparison, onOpenChange]);
 
   // ── File input change ──────────────────────────────────────────────────────
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = ""; // reset so the same file can be picked again
     if (!files.length) return;
-    if (files.length === 1) {
-      handleSingleFile(files[0]);
-    } else {
-      handleMultiFiles(files);
-    }
+
+    // Reset queue for this session
+    bgGenRef.current += 1;
+    setBgProcessing(false);
+    setOriginalUrl(prev  => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setCleanedUrl(prev   => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setOriginalBlob(null);
+    setCleanedBlob(null);
+    setBgFailed(false);
+    setSelected("original");
+
+    fileQueueRef.current  = files;
+    savedCountRef.current = 0;
+    setQueueIndex(0);
+    setQueueTotal(files.length);
+    setErrorMsg(null);
+
+    showComparison(files[0]);
   };
 
   if (!open) return null;
 
-  const label = CATEGORY_LABELS[category];
+  const label       = CATEGORY_LABELS[category];
+  const isMulti     = queueTotal > 1;
 
   return (
     <motion.div
@@ -308,9 +345,16 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
       >
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          {phase === "preview" ? "Choose Version" : `Add ${label}`}
-        </h2>
+        <div className="flex flex-col">
+          <h2 className="font-display font-bold text-xl uppercase tracking-tight leading-tight">
+            {phase === "preview" ? "Choose Version" : `Add ${label}`}
+          </h2>
+          {phase === "preview" && isMulti && (
+            <span className="text-xs text-black/45 font-medium">
+              Photo {queueIndex + 1} of {queueTotal}
+            </span>
+          )}
+        </div>
         {(phase === "pick" || phase === "preview") && (
           <button
             onClick={handleClose}
@@ -366,7 +410,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 >
                   <span className="text-4xl leading-none">🖼️</span>
                   <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
-                    Upload<br />Photo
+                    Upload<br />Photos
                   </span>
                 </button>
               </div>
@@ -419,7 +463,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 {bgProcessing
                   ? "Removing background… this may take a moment."
                   : bgFailed
-                  ? "Background removal failed — original saved."
+                  ? "Background removal failed — original will be saved."
                   : "Tap a version to select it, then save."}
               </p>
 
@@ -497,7 +541,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
               {/* Save button */}
               <button
-                onClick={handleSave}
+                onClick={() =>
+                  handleSave(
+                    originalBlob, cleanedBlob, selected,
+                    originalUrl, cleanedUrl, queueIndex,
+                  )
+                }
                 disabled={bgProcessing}
                 className={`w-full py-4 border-4 border-black rounded-2xl font-display font-bold
                   text-base uppercase tracking-tight transition-all
@@ -505,13 +554,28 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                     ? "bg-gray-200 text-black/40 cursor-not-allowed shadow-none"
                     : "bg-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"}`}
               >
-                {bgProcessing ? "Processing…" : "Save"}
+                {bgProcessing
+                  ? "Processing…"
+                  : isMulti && queueIndex + 1 < queueTotal
+                  ? `Save & Next →`
+                  : "Save"}
               </button>
 
-              {/* Back link */}
+              {/* Back / retake link */}
               <button
                 onClick={() => {
-                  resetComparison(originalUrl, cleanedUrl);
+                  bgGenRef.current += 1;
+                  setBgProcessing(false);
+                  setOriginalUrl(prev  => { if (prev) URL.revokeObjectURL(prev); return null; });
+                  setCleanedUrl(prev   => { if (prev) URL.revokeObjectURL(prev); return null; });
+                  setOriginalBlob(null);
+                  setCleanedBlob(null);
+                  setBgFailed(false);
+                  setSelected("original");
+                  fileQueueRef.current  = [];
+                  savedCountRef.current = 0;
+                  setQueueIndex(0);
+                  setQueueTotal(1);
                   setPhase("pick");
                 }}
                 className="text-center text-sm text-black/45 underline underline-offset-2 py-1"
@@ -550,7 +614,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       </div>
 
       {/* Hidden file inputs */}
-      {/* Camera — opens native camera on mobile */}
+      {/* Camera — opens native camera on mobile (single file only) */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -559,7 +623,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="hidden"
         onChange={handleInputChange}
       />
-      {/* Gallery — opens photo library / file picker (multiple selection) */}
+      {/* Gallery — opens photo library; multiple selection enabled */}
       <input
         ref={galleryInputRef}
         type="file"

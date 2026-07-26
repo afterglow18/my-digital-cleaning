@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Heart, Trash2, Save, ChevronDown,
+  X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -19,6 +19,7 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
+import { processClothingImage } from "@/lib/processImage";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -151,6 +152,12 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const [form, setForm]           = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Background removal on existing saved image
+  const [bgRemoving,    setBgRemoving]    = useState(false);
+  const [bgError,       setBgError]       = useState<string | null>(null);
+  /** Shadows item.imageObjectPath after a successful in-place removal */
+  const [liveImagePath, setLiveImagePath] = useState<string | null>(null);
+
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
@@ -159,7 +166,52 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
+    setBgRemoving(false);
+    setBgError(null);
+    setLiveImagePath(null);
   }, [item?.id]);
+
+  /** Remove background from the item's current photo and save it in-place. */
+  const handleRemoveBg = async () => {
+    const srcPath = liveImagePath ?? item?.imageObjectPath;
+    if (!srcPath || !item) return;
+    setBgRemoving(true);
+    setBgError(null);
+    try {
+      // Convert existing data URL → Blob so processClothingImage can read it
+      const res  = await fetch(srcPath);
+      const blob = await res.blob();
+      // bg removal + tight crop
+      const cleaned = await processClothingImage(blob);
+      // Preserve PNG transparency via FileReader
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(cleaned);
+      });
+      await new Promise<void>((resolve, reject) => {
+        updateItem.mutate(
+          { id: item.id, data: { imageObjectPath: dataUrl } },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+              queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+              queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+              resolve();
+            },
+            onError: reject,
+          },
+        );
+      });
+      setLiveImagePath(dataUrl);
+    } catch (err) {
+      console.error("Background removal failed:", err);
+      setBgError("Could not remove background. Please try again.");
+    } finally {
+      setBgRemoving(false);
+    }
+  };
 
   if (!item || !form) return null;
 
@@ -270,21 +322,52 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       </div>
 
-      {/* ── Photo ── */}
+      {/* ── Photo + Remove-bg button ── */}
       {item.imageObjectPath && (
-        <div
-          className="w-full h-52 flex-shrink-0 border-b-2 border-black"
-          style={{
-            backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-            backgroundSize: "16px 16px",
-          }}
-        >
-          <img
-            src={getImageUrl(item.imageObjectPath)!}
-            alt={item.name}
-            className="w-full h-full object-contain"
-          />
-        </div>
+        <>
+          <div
+            className="w-full h-52 flex-shrink-0 relative"
+            style={{
+              backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+              backgroundSize: "16px 16px",
+            }}
+          >
+            <img
+              src={getImageUrl(liveImagePath ?? item.imageObjectPath)!}
+              alt={item.name}
+              className="w-full h-full object-contain"
+            />
+            {/* Dim overlay while processing */}
+            {bgRemoving && (
+              <div className="absolute inset-0 bg-white/60 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-8 h-8 animate-spin text-black/50" strokeWidth={1.5} />
+                <span className="text-xs font-medium text-black/50">Removing background…</span>
+              </div>
+            )}
+          </div>
+
+          {/* Action row below photo */}
+          <div className="flex-shrink-0 border-b-2 border-black bg-white px-4 py-2.5 flex items-center gap-3">
+            <button
+              onClick={handleRemoveBg}
+              disabled={bgRemoving}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-black text-xs font-bold
+                uppercase tracking-tight transition-all
+                ${bgRemoving
+                  ? "bg-gray-100 text-black/30 cursor-not-allowed"
+                  : "bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {bgRemoving ? "Processing…" : liveImagePath ? "Remove Again ✨" : "Remove Background ✨"}
+            </button>
+            {bgError && (
+              <span className="text-xs text-red-600 font-medium flex-1">{bgError}</span>
+            )}
+            {!bgError && liveImagePath && !bgRemoving && (
+              <span className="text-xs text-green-700 font-medium">Background removed ✓</span>
+            )}
+          </div>
+        </>
       )}
 
       {/* ── Form ── */}
