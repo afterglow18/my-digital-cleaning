@@ -2,25 +2,19 @@
  * QuickAddSheet
  *
  * Upload flow:
- *   pick ──(file chosen)──► uploading ──► close
- *
- * To re-enable background removal in a future update, replace encodeToPng
- * with processClothingImage from @/lib/processImage.
+ *   pick ──(single file)──► preview (Original | Cleaned ✨ side-by-side) ──(save)──► uploading ──► close
+ *        ──(multi files)──► uploading ──► close   (no comparison for bulk)
  */
 import React, { useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  Loader2,
-  Check,
-} from "lucide-react";
+import { X, Loader2, Check } from "lucide-react";
 import {
   useCreateClothingItem,
   getListClothingQueryKey,
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
-import { encodeToPng } from "@/lib/processImage";
+import { encodeToPng, processClothingImage } from "@/lib/processImage";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -35,7 +29,8 @@ const CATEGORY_LABELS: Record<Category, string> = {
 
 type Phase =
   | "pick"       // two-button landing screen
-  | "uploading"; // encoding + uploading PNG, creating DB record
+  | "preview"    // side-by-side Original | Cleaned comparison
+  | "uploading"; // encoding + saving to DB
 
 interface UploadProgress {
   current: number;
@@ -44,37 +39,42 @@ interface UploadProgress {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-/** Convert a Blob to a JPEG data URL (compressed, ready for DB storage). */
-async function blobToDataUrl(blob: Blob): Promise<string> {
+/**
+ * Compress to JPEG ≤ 800 px and return a data URL for DB storage.
+ * Used for originals (no transparency needed).
+ */
+async function blobToJpegDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
     img.onload = () => {
       URL.revokeObjectURL(url);
       const canvas = document.createElement("canvas");
-      // Cap at 800px wide to keep data URLs small
-      const scale = Math.min(1, 800 / img.naturalWidth);
+      const scale  = Math.min(1, 800 / img.naturalWidth);
       canvas.width  = Math.round(img.naturalWidth  * scale);
       canvas.height = Math.round(img.naturalHeight * scale);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      resolve(dataUrl);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
     };
     img.onerror = reject;
     img.src = url;
   });
 }
 
-// ── Component ──────────────────────────────────────────────────────────────────
-
-interface Props {
-  open:          boolean;
-  onOpenChange:  (open: boolean) => void;
-  category:      Category;
-  existingCount: number;
-  /** Called with the newly created item after a successful upload. */
-  onCreated?:    (item: import("@/lib/db").ClothingItem) => void;
+/**
+ * Convert a Blob to a data URL via FileReader.
+ * Preserves PNG transparency — used when storing the cleaned version.
+ */
+function blobToRawDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("FileReader failed"));
+    reader.readAsDataURL(blob);
+  });
 }
+
+// ── Constants ──────────────────────────────────────────────────────────────────
 
 const PHOTO_TIPS = [
   "Photograph individual products or bundle multiple items together.",
@@ -90,10 +90,35 @@ const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
   essentials: { emoji: "🧳", items: ["Travel Docs", "Tech", "Snacks", "Books", "Accessories"] },
 };
 
+// ── Component ──────────────────────────────────────────────────────────────────
+
+interface Props {
+  open:          boolean;
+  onOpenChange:  (open: boolean) => void;
+  category:      Category;
+  existingCount: number;
+  /** Called with the newly created item after a successful upload. */
+  onCreated?:    (item: import("@/lib/db").ClothingItem) => void;
+}
+
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
   const [phase,    setPhase]   = useState<Phase>("pick");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
+
+  // ── Comparison state ───────────────────────────────────────────────────────
+  const [originalBlob, setOriginalBlob] = useState<Blob | null>(null);
+  const [originalUrl,  setOriginalUrl]  = useState<string | null>(null);
+  const [cleanedBlob,  setCleanedBlob]  = useState<Blob | null>(null);
+  const [cleanedUrl,   setCleanedUrl]   = useState<string | null>(null);
+  const [bgProcessing, setBgProcessing] = useState(false);
+  const [bgFailed,     setBgFailed]     = useState(false);
+  const [selected,     setSelected]     = useState<"original" | "cleaned">("original");
+  /**
+   * Generation counter — prevents a stale bg-removal result from a previous
+   * photo clobbering the current photo's state when two removals overlap.
+   */
+  const bgGenRef = useRef(0);
 
   // Two separate file inputs: one triggers camera, one opens gallery
   const cameraInputRef  = useRef<HTMLInputElement>(null);
@@ -102,30 +127,46 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
 
-  // ── Reset ────────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /** Revoke any open object URLs and reset all comparison state. */
+  const resetComparison = useCallback((origUrl: string | null, cleanUrl: string | null) => {
+    bgGenRef.current += 1;        // cancel any in-flight removal
+    setBgProcessing(false);       // MUST reset — close can happen mid-removal
+    if (origUrl)  URL.revokeObjectURL(origUrl);
+    if (cleanUrl) URL.revokeObjectURL(cleanUrl);
+    setOriginalBlob(null);
+    setOriginalUrl(null);
+    setCleanedBlob(null);
+    setCleanedUrl(null);
+    setBgFailed(false);
+    setSelected("original");
+  }, []);
+
+  // ── Reset / close ──────────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
+    resetComparison(originalUrl, cleanedUrl);
     setPhase("pick");
     setErrorMsg(null);
     onOpenChange(false);
-  }, [onOpenChange]);
+  }, [onOpenChange, originalUrl, cleanedUrl, resetComparison]);
 
-  // ── Single-file encode + save (returns true on success) ──────────────────
-  const saveOneFile = useCallback(async (file: File, itemIndex: number): Promise<boolean> => {
-    let png: Blob;
+  // ── Save a blob into the DB ────────────────────────────────────────────────
+  const saveBlobItem = useCallback(async (
+    blob:      Blob,
+    itemIndex: number,
+    asPng:     boolean,   // true → preserve PNG (transparent); false → JPEG compress
+  ): Promise<boolean> => {
     try {
-      png = await encodeToPng(file);
-    } catch (err) {
-      console.error("PNG encoding failed:", err);
-      return false;
-    }
-    try {
-      const path     = await blobToDataUrl(png);
+      const dataUrl  = asPng
+        ? await blobToRawDataUrl(blob)
+        : await blobToJpegDataUrl(blob);
       const label    = CATEGORY_LABELS[category];
       const n        = itemIndex + 1;
       const autoName = n === 1 ? label : `${label} ${n}`;
       await new Promise<void>((resolve, reject) => {
         createItem.mutate(
-          { data: { name: autoName, category, imageObjectPath: path } },
+          { data: { name: autoName, category, imageObjectPath: dataUrl } },
           {
             onSuccess: (createdItem) => {
               queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
@@ -144,9 +185,73 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
   }, [category, createItem, queryClient, onCreated]);
 
-  // ── Process one or many files sequentially ────────────────────────────────
-  const handleFiles = useCallback(async (files: File[]) => {
-    if (!files.length) return;
+  // ── Single-file path → show comparison UI ─────────────────────────────────
+  const handleSingleFile = useCallback(async (file: File) => {
+    setErrorMsg(null);
+
+    // 1. Encode to normalised PNG for display + fallback storage
+    let png: Blob;
+    try {
+      png = await encodeToPng(file);
+    } catch {
+      setErrorMsg("Could not read photo. Please try again.");
+      return;
+    }
+
+    // 2. Show original immediately and switch to preview phase
+    const objUrl = URL.createObjectURL(png);
+    setOriginalBlob(png);
+    setOriginalUrl(objUrl);
+    setCleanedBlob(null);
+    setCleanedUrl(null);
+    setBgFailed(false);
+    setSelected("original");
+    setPhase("preview");
+
+    // 3. Background removal — generation guard prevents stale results
+    const myGen = ++bgGenRef.current;
+    setBgProcessing(true);
+    try {
+      // processClothingImage: bg removal + tight crop/square PNG
+      const cleaned = await processClothingImage(file);
+      if (bgGenRef.current !== myGen) return;
+      const cleanedObjUrl = URL.createObjectURL(cleaned);
+      if (bgGenRef.current !== myGen) { URL.revokeObjectURL(cleanedObjUrl); return; }
+      setCleanedBlob(cleaned);
+      setCleanedUrl(cleanedObjUrl);
+      setSelected("cleaned"); // auto-select the cleaned version
+    } catch (err) {
+      if (bgGenRef.current !== myGen) return;
+      console.warn("Background removal failed, keeping original:", err);
+      setBgFailed(true);
+    } finally {
+      if (bgGenRef.current === myGen) setBgProcessing(false);
+    }
+  }, []);
+
+  // ── Save from comparison preview ───────────────────────────────────────────
+  const handleSave = useCallback(async () => {
+    const useClean = selected === "cleaned" && cleanedBlob != null;
+    const blob     = useClean ? cleanedBlob! : originalBlob!;
+    setPhase("uploading");
+    setProgress({ current: 1, total: 1 });
+    const ok = await saveBlobItem(blob, existingCount, useClean);
+    setProgress(null);
+    if (ok) {
+      // Revoke URLs before closing
+      resetComparison(originalUrl, cleanedUrl);
+      setPhase("pick");
+      setErrorMsg(null);
+      onOpenChange(false);
+    } else {
+      setErrorMsg("Could not save photo. Please try again.");
+      setPhase("preview");
+    }
+  }, [selected, cleanedBlob, originalBlob, saveBlobItem, existingCount,
+      resetComparison, originalUrl, cleanedUrl, onOpenChange]);
+
+  // ── Multi-file path (no comparison) ───────────────────────────────────────
+  const handleMultiFiles = useCallback(async (files: File[]) => {
     setErrorMsg(null);
     setPhase("uploading");
     setProgress({ current: 0, total: files.length });
@@ -154,7 +259,14 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     let failed = 0;
     for (let i = 0; i < files.length; i++) {
       setProgress({ current: i + 1, total: files.length });
-      const ok = await saveOneFile(files[i], existingCount + i);
+      let png: Blob;
+      try {
+        png = await encodeToPng(files[i]);
+      } catch {
+        failed++;
+        continue;
+      }
+      const ok = await saveBlobItem(png, existingCount + i, false);
       if (!ok) failed++;
     }
 
@@ -163,14 +275,20 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       setErrorMsg(`${failed} photo${failed > 1 ? "s" : ""} could not be saved. Please try again.`);
       setPhase("pick");
     } else {
-      handleClose();
+      onOpenChange(false);
     }
-  }, [saveOneFile, existingCount, handleClose]);
+  }, [saveBlobItem, existingCount, onOpenChange]);
 
+  // ── File input change ──────────────────────────────────────────────────────
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (files.length) handleFiles(files);
-    e.target.value = "";
+    e.target.value = ""; // reset so the same file can be picked again
+    if (!files.length) return;
+    if (files.length === 1) {
+      handleSingleFile(files[0]);
+    } else {
+      handleMultiFiles(files);
+    }
   };
 
   if (!open) return null;
@@ -186,12 +304,14 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       className="fixed inset-0 z-[70] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}>
+      <div
+        className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+      >
         <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Add {label}
+          {phase === "preview" ? "Choose Version" : `Add ${label}`}
         </h2>
-        {phase === "pick" && (
+        {(phase === "pick" || phase === "preview") && (
           <button
             onClick={handleClose}
             className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
@@ -224,14 +344,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
               {/* Two big action buttons */}
               <div className="flex gap-3">
-                {/* Take Photo */}
                 <button
                   onClick={() => cameraInputRef.current?.click()}
                   className="flex-1 flex flex-col items-center justify-center gap-3 py-8
                              border-4 border-black rounded-2xl bg-primary
                              shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-1 active:translate-y-1 active:shadow-none
-                             transition-all"
+                             active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
                 >
                   <span className="text-4xl leading-none">📷</span>
                   <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
@@ -239,14 +357,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   </span>
                 </button>
 
-                {/* Upload Photo */}
                 <button
                   onClick={() => galleryInputRef.current?.click()}
                   className="flex-1 flex flex-col items-center justify-center gap-3 py-8
                              border-4 border-black rounded-2xl bg-white
                              shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-1 active:translate-y-1 active:shadow-none
-                             transition-all"
+                             active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
                 >
                   <span className="text-4xl leading-none">🖼️</span>
                   <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
@@ -286,6 +402,122 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   ))}
                 </ul>
               </div>
+            </motion.div>
+          )}
+
+          {/* ── PREVIEW (comparison) ── */}
+          {phase === "preview" && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col p-5 gap-4"
+            >
+              {/* Subtitle */}
+              <p className="text-center text-sm font-medium text-black/55">
+                {bgProcessing
+                  ? "Removing background… this may take a moment."
+                  : bgFailed
+                  ? "Background removal failed — original saved."
+                  : "Tap a version to select it, then save."}
+              </p>
+
+              {/* Side-by-side cards */}
+              <div className="flex gap-3">
+
+                {/* Original card */}
+                <button
+                  onClick={() => setSelected("original")}
+                  className={`flex-1 flex flex-col overflow-hidden rounded-2xl border-4 transition-all
+                    ${selected === "original"
+                      ? "border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] scale-[1.02]"
+                      : "border-black/25 opacity-55"}`}
+                >
+                  <div className="w-full aspect-square bg-white overflow-hidden">
+                    {originalUrl && (
+                      <img
+                        src={originalUrl}
+                        alt="Original"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="bg-white px-2 py-2 text-center border-t-2 border-inherit">
+                    <span className="font-display font-bold text-xs uppercase tracking-tight">
+                      Original
+                    </span>
+                  </div>
+                </button>
+
+                {/* Cleaned card */}
+                <button
+                  onClick={() => cleanedUrl && setSelected("cleaned")}
+                  disabled={!cleanedUrl}
+                  className={`flex-1 flex flex-col overflow-hidden rounded-2xl border-4 transition-all
+                    ${selected === "cleaned" && cleanedUrl
+                      ? "border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] scale-[1.02]"
+                      : "border-black/25 opacity-55"}`}
+                >
+                  {/* Checkerboard shows transparency */}
+                  <div
+                    className="w-full aspect-square overflow-hidden"
+                    style={{
+                      background:
+                        "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 16px 16px",
+                    }}
+                  >
+                    {bgProcessing ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-white/50">
+                        <Loader2 className="w-8 h-8 animate-spin text-black/40" strokeWidth={1.5} />
+                        <span className="text-[11px] text-black/40 font-medium">Processing…</span>
+                      </div>
+                    ) : cleanedUrl ? (
+                      <img
+                        src={cleanedUrl}
+                        alt="Cleaned"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : bgFailed ? (
+                      <div className="w-full h-full flex items-center justify-center bg-white/50">
+                        <span className="text-[11px] text-black/40 font-medium text-center px-3">
+                          Could not remove background
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="bg-white px-2 py-2 text-center border-t-2 border-inherit">
+                    <span className="font-display font-bold text-xs uppercase tracking-tight">
+                      Cleaned ✨
+                    </span>
+                  </div>
+                </button>
+
+              </div>
+
+              {/* Save button */}
+              <button
+                onClick={handleSave}
+                disabled={bgProcessing}
+                className={`w-full py-4 border-4 border-black rounded-2xl font-display font-bold
+                  text-base uppercase tracking-tight transition-all
+                  ${bgProcessing
+                    ? "bg-gray-200 text-black/40 cursor-not-allowed shadow-none"
+                    : "bg-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"}`}
+              >
+                {bgProcessing ? "Processing…" : "Save"}
+              </button>
+
+              {/* Back link */}
+              <button
+                onClick={() => {
+                  resetComparison(originalUrl, cleanedUrl);
+                  setPhase("pick");
+                }}
+                className="text-center text-sm text-black/45 underline underline-offset-2 py-1"
+              >
+                ← Take a different photo
+              </button>
             </motion.div>
           )}
 

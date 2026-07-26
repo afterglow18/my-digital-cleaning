@@ -1,0 +1,193 @@
+Add automatic background removal to the photo upload flow. When a user takes or selects a photo, show a side-by-side Original | Cleaned ✨ comparison immediately. The user taps to choose which version to keep, then saves. Uses @imgly/background-removal — pure JS/WebAssembly, works inside WKWebView (Capacitor iOS), no native plugins or CocoaPods required.
+
+Step 1 — Install the package
+
+Add to package.json dependencies:
+
+"@imgly/background-removal": "^1.7.0"
+Then run pnpm install (or npm install).
+
+Step 2 — Vite config (every vite config file in the project)
+
+Add inside defineConfig({}) — without this, Vite crashes trying to pre-bundle the WASM imports:
+
+optimizeDeps: {
+  exclude: ['@imgly/background-removal'],
+},
+Step 3 — Create src/lib/backgroundRemoval.ts
+
+import { removeBackground as imglyRemoveBackground } from "@imgly/background-removal";
+export type RemovalProgress =
+  | { stage: "loading"; pct: number }
+  | { stage: "inferring" }
+  | { stage: "done" };
+export async function isBackgroundRemovalSupported(): Promise<boolean> {
+  return true; // JS/WASM works on every platform
+}
+export async function getBackgroundRemovalError(): Promise<string> {
+  return ""; // always available
+}
+/**
+ * Takes a JPEG/PNG base64 data-URL, returns a PNG data-URL with transparent background.
+ * On first use, downloads ~15 MB ONNX model from imgly CDN (cached by WKWebView permanently).
+ * Throws only on network error or completely unreadable image — callers should catch and fall back.
+ */
+export async function removeBackground(
+  dataUrl: string,
+  onProgress?: (p: RemovalProgress) => void,
+): Promise<string> {
+  onProgress?.({ stage: "loading", pct: 0 });
+  const sourceBlob = await dataUrlToBlob(dataUrl);
+  onProgress?.({ stage: "inferring" });
+  const resultBlob = await imglyRemoveBackground(sourceBlob, {
+    // Valid model values in v1.7: "isnet" | "isnet_fp16" | "isnet_quint8"
+    // Do NOT use "small" or "medium" — not valid in this version
+    model: "isnet_fp16",
+    output: { format: "image/png", quality: 0.9 },
+    // publicPath omitted → library uses staticimgly CDN automatically
+  });
+  onProgress?.({ stage: "done" });
+  return blobToDataUrl(resultBlob);
+}
+export function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("FileReader failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  const res = await fetch(dataUrl);
+  return res.blob();
+}
+Step 4 — Wire into your photo upload component
+
+State to add
+
+const [originalBlob, setOriginalBlob] = useState<Blob | null>(null);
+const [originalUrl,  setOriginalUrl]  = useState<string | null>(null);
+const [cleanedBlob,  setCleanedBlob]  = useState<Blob | null>(null);
+const [cleanedUrl,   setCleanedUrl]   = useState<string | null>(null);
+const [bgProcessing, setBgProcessing] = useState(false);
+const [bgFailed,     setBgFailed]     = useState(false);
+const [selected,     setSelected]     = useState<"original" | "cleaned">("original");
+// Generation counter — prevents stale results from a previous photo
+// clobbering the current photo's state when two removals run concurrently
+const bgGenRef = useRef(0);
+Reset function (call on close/cancel)
+
+const handleClose = () => {
+  bgGenRef.current += 1;       // cancels any in-flight removal
+  setBgProcessing(false);      // MUST reset — close can happen mid-removal
+  setOriginalBlob(null);
+  setOriginalUrl(null);
+  setCleanedBlob(null);
+  setCleanedUrl(null);
+  setBgFailed(false);
+  setSelected("original");
+  // ... your other close logic
+};
+handleFile — call this after the user picks or takes a photo
+
+const handleFile = useCallback(async (file: File | Blob) => {
+  // 1. Encode to JPEG ≤ 2048px (keeps files small)
+  const jpeg = await encodeForUpload(file); // see helper below
+  // 2. Show original immediately
+  const url = URL.createObjectURL(jpeg);
+  setOriginalBlob(jpeg);
+  setOriginalUrl(url);
+  setCleanedBlob(null);
+  setCleanedUrl(null);
+  setBgFailed(false);
+  setSelected("original");
+  setPhase("preview"); // switch to your comparison screen
+  // 3. Background removal — generation guard prevents stale results
+  const myGen = ++bgGenRef.current;
+  setBgProcessing(true);
+  try {
+    const dataUrl   = await blobToDataUrl(jpeg);
+    if (bgGenRef.current !== myGen) return;
+    const resultUrl = await removeBackground(dataUrl);
+    if (bgGenRef.current !== myGen) return;
+    const resultBlob   = await dataUrlToBlob(resultUrl);
+    const resultObjUrl = URL.createObjectURL(resultBlob);
+    if (bgGenRef.current !== myGen) { URL.revokeObjectURL(resultObjUrl); return; }
+    setCleanedBlob(resultBlob);
+    setCleanedUrl(resultObjUrl);
+    setSelected("cleaned"); // auto-select the cleaned version
+  } catch (err) {
+    if (bgGenRef.current !== myGen) return;
+    console.warn("Background removal failed, keeping original:", err);
+    setBgFailed(true);
+  } finally {
+    if (bgGenRef.current === myGen) setBgProcessing(false);
+  }
+}, []);
+encodeForUpload helper
+
+async function encodeForUpload(input: File | Blob): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(input);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 2048;
+      const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(b => b && b.size > 1000 ? resolve(b) : reject(new Error("blank")), "image/jpeg", 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("load failed")); };
+    img.src = url;
+  });
+}
+Step 5 — Comparison UI (your "preview" phase)
+
+{/* Header */}
+<p>{bgProcessing ? "This will take a moment…" : bgFailed ? "Original" : "Tap to choose"}</p>
+<div style={{ display: "flex", gap: 12 }}>
+  {/* Original card */}
+  <button onClick={() => setSelected("original")}
+          style={{ opacity: selected === "original" ? 1 : 0.5 }}>
+    <img src={originalUrl} alt="Original" />
+    <span>Original</span>
+  </button>
+  {/* Cleaned card */}
+  <button onClick={() => cleanedUrl && setSelected("cleaned")}
+          disabled={!cleanedUrl}
+          style={{ opacity: selected === "cleaned" && cleanedUrl ? 1 : 0.5 }}>
+    {/* checkerboard background shows transparency */}
+    <div style={{ background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px" }}>
+      {bgProcessing ? (
+        <span>Processing…</span>
+      ) : cleanedUrl ? (
+        <img src={cleanedUrl} alt="Cleaned" />
+      ) : (
+        <span>{bgFailed ? "Could not remove background" : ""}</span>
+      )}
+    </div>
+    <span>Cleaned ✨</span>
+  </button>
+</div>
+{/* Save button — disabled while processing so user sees both options */}
+<button onClick={handleSave} disabled={bgProcessing}>
+  {bgProcessing ? "Processing…" : "Save"}
+</button>
+Save logic — use whichever version is selected
+
+const handleSave = async () => {
+  const blob = selected === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
+  const ext  = selected === "cleaned" && cleanedBlob ? "png" : "jpg";
+  // ... save blob with your storage logic
+};
+Key gotchas
+
+Never use model: "small" or model: "medium" — not valid in v1.7. Use "isnet", "isnet_fp16", or "isnet_quint8".
+The generation counter is non-negotiable. Without it, if the user takes a second photo before the first removal finishes, photo #1's finally block fires setBgProcessing(false) on photo #2's state, silently killing the spinner. Photo #1's result also overwrites photo #2's cleaned output.
+Reset bgProcessing in your close/cancel handler. If the sheet closes mid-removal, the state persists (React doesn't reset useState on conditional rendering). The next open will start with bgProcessing: true and a disabled Save button.
+First use is slow (~15–30 s) while the ONNX model downloads. WKWebView caches it permanently so every photo after that processes in 2–3 s. The "This will take a moment…" label sets the right expectation.
+Do not attempt a native Capacitor plugin (Swift VNGenerateForegroundInstanceMaskRequest). Swift classes in dynamic pod frameworks use lazy ObjC registration and are never found by Capacitor's auto-discovery. The JS library avoids all of this.
