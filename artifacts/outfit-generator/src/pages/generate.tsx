@@ -32,12 +32,12 @@ const LM = {
   doorL: 0.10,
   doorR: 0.92,
   rows: [
-    { sectionTop: 0.04, shelfY: 0.22, btnCY: 0.11 },  // OUTFITS    (shelf 1)
-    { sectionTop: 0.23, shelfY: 0.46, btnCY: 0.33 },  // BEAUTY     (shelf 2)
-    { sectionTop: 0.47, shelfY: 0.68, btnCY: 0.56 },  // TOILETRIES (shelf 3)
-    { sectionTop: 0.69, shelfY: 0.84, btnCY: 0.75 },  // ESSENTIALS (below shelves)
+    { sectionTop: 0.13, shelfY: 0.267, btnCY: 0.20 },  // OUTFITS    (shelf 1 surface at 26.7%)
+    { sectionTop: 0.33, shelfY: 0.433, btnCY: 0.38 },  // BEAUTY     (shelf 2 surface at 43.3%)
+    { sectionTop: 0.47, shelfY: 0.602, btnCY: 0.54 },  // TOILETRIES (shelf 3 surface at 60.2%)
+    { sectionTop: 0.65, shelfY: 0.760, btnCY: 0.70 },  // ESSENTIALS (below all shelves)
   ],
-  barY:   0.848,
+  barY:   0.820,
   barBot: 1.000,
 } as const;
 

@@ -1,20 +1,24 @@
 /**
- * WardrobePage — briefcase-bg.png (1024×1536 PNG)
+ * WardrobePage — cleaning-shelves-bg.png (1024×1536 PNG)
  *
- * Layout: 4 shelf sections inside a Hollywood-mirror frame.
+ * Layout: 4 sections mapped to 3 physical wall shelves + floor area.
  * Items sit ON TOP of each shelf surface (bottom-anchored within each section).
- * Baked-in pink "ADD X" pills show through the background when shelves are empty;
- * a React-rendered transparent tap zone handles the click.
- * When items are present, the carousel fills the section and covers the pill.
+ * React-rendered category labels and transparent tap zones overlay the empty
+ * pink wall space above each shelf.
+ *
+ * Shelf surface positions (calibrated from pixel analysis of 1024×1536 image):
+ *   Shelf 1 top surface: y ≈ 0.267  (px 410 / 1536)
+ *   Shelf 2 top surface: y ≈ 0.433  (px 665 / 1536)
+ *   Shelf 3 top surface: y ≈ 0.602  (px 925 / 1536)
+ *   Floor / below-shelf:  y ≈ 0.760
  *
  * Sections (y-fractions of image height):
- *   Section 1 (TOPS):        0.19 → 0.39
- *   Section 2 (BOTTOMS):     0.39 → 0.55
- *   Section 3 (SHOES):       0.55 → 0.71
- *   Section 4 (ACCESSORIES): 0.71 → 0.85
+ *   Section 1 (OUTFITS):    0.13 → 0.267
+ *   Section 2 (BEAUTY):     0.33 → 0.433
+ *   Section 3 (TOILETRIES): 0.47 → 0.602
+ *   Section 4 (ESSENTIALS): 0.65 → 0.760
  *
- * No rod-overlay technique needed — shelf surfaces are already below items.
- * Save outfit: floating pill button at the top of the mirror.
+ * Save outfit: floating pill button in the lower floor area.
  */
 
 import React, {
@@ -54,18 +58,19 @@ const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for cleaning-shelves-bg.png 1024×1536) ──────
-// 3 pink wall shelves. Rows 1-3 each occupy the space above a shelf.
-// Row 4 occupies the empty wall area beneath the lowest shelf.
+// ── Landmark fractions (calibrated via pixel analysis of cleaning-shelves-bg.png 1024×1536) ──
+// 3 pink wall shelves. Each row fills the wall space above a shelf surface.
+// shelfY = exact top-surface of the shelf board (items rest here, bottom-anchored).
+// Row 4 occupies the floor/accessory area below the lowest shelf.
 const LM = {
   doorL: 0.10,   // left usable boundary
   doorR: 0.92,   // right usable boundary
 
   rows: [
-    { sectionTop: 0.04, shelfY: 0.22, btnCY: 0.11 },  // OUTFITS    (shelf 1)
-    { sectionTop: 0.23, shelfY: 0.46, btnCY: 0.33 },  // BEAUTY     (shelf 2)
-    { sectionTop: 0.47, shelfY: 0.68, btnCY: 0.56 },  // TOILETRIES (shelf 3)
-    { sectionTop: 0.69, shelfY: 0.84, btnCY: 0.75 },  // ESSENTIALS (below shelves)
+    { sectionTop: 0.13, shelfY: 0.267, btnCY: 0.20 },  // OUTFITS    (shelf 1 surface at 26.7%)
+    { sectionTop: 0.33, shelfY: 0.433, btnCY: 0.38 },  // BEAUTY     (shelf 2 surface at 43.3%)
+    { sectionTop: 0.47, shelfY: 0.602, btnCY: 0.54 },  // TOILETRIES (shelf 3 surface at 60.2%)
+    { sectionTop: 0.65, shelfY: 0.760, btnCY: 0.70 },  // ESSENTIALS (below all shelves)
   ],
 
   saveAreaY: 0.85,
