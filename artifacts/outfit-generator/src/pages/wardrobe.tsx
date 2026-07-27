@@ -41,6 +41,7 @@ import { UpgradeSheet, UpgradeReason } from "@/components/paywall/UpgradeSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
+import { createClothingItem } from "@/lib/localDB";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
@@ -140,6 +141,26 @@ export default function WardrobePage() {
 
   const queryClient = useQueryClient();
   const { tier, canAddItem } = useEntitlements();
+
+  // ── Dev-only: seed one placeholder item per category when ?seed=1 ──────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("seed") !== "1") return;
+    const SEED_KEY = "wardrobe-seed-done";
+    if (sessionStorage.getItem(SEED_KEY)) return;
+    sessionStorage.setItem(SEED_KEY, "1");
+    const seeds: { name: string; category: string }[] = [
+      { name: "Summer Dress",   category: "outfits"    },
+      { name: "Rose Serum",     category: "beauty"     },
+      { name: "Travel Shampoo", category: "toiletries" },
+      { name: "Charger Kit",    category: "essentials" },
+    ];
+    Promise.all(seeds.map(s => createClothingItem(s)))
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["clothing"] });
+      })
+      .catch(() => {/* dev-only, silent */ });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setCentred(prev => {
