@@ -54,23 +54,21 @@ const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for suitcase-open-bg.jpg 989×1536) ─────────
-// Real-photo suitcase, shot from above.
-// Lid interior:  y ≈ 0.05 → 0.38   (rows 1 & 2)
-// Main body:     y ≈ 0.42 → 0.80   (rows 3 & 4)
-// doorL/doorR:   left/right inner walls of the suitcase interior
+// ── Landmark fractions (calibrated for cleaning-shelves-bg.png 1024×1536) ──────
+// 3 pink wall shelves. Rows 1-3 each occupy the space above a shelf.
+// Row 4 occupies the empty wall area beneath the lowest shelf.
 const LM = {
-  doorL: 0.182,  // inner left wall
-  doorR: 0.776,  // inner right wall
+  doorL: 0.10,   // left usable boundary
+  doorR: 0.92,   // right usable boundary
 
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.04, shelfY: 0.22, btnCY: 0.11 },  // OUTFITS    (shelf 1)
+    { sectionTop: 0.23, shelfY: 0.46, btnCY: 0.33 },  // BEAUTY     (shelf 2)
+    { sectionTop: 0.47, shelfY: 0.68, btnCY: 0.56 },  // TOILETRIES (shelf 3)
+    { sectionTop: 0.69, shelfY: 0.84, btnCY: 0.75 },  // ESSENTIALS (below shelves)
   ],
 
-  saveAreaY: 0.84,
+  saveAreaY: 0.85,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -211,12 +209,12 @@ export default function WardrobePage() {
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#fce8ef",
       }}
     >
-      {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
+      {/* ── Background image ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/cleaning-shelves-bg.png"
         alt="My Digital Cleaning"
         style={{
           position: "absolute",
@@ -251,7 +249,7 @@ export default function WardrobePage() {
               letterSpacing: "0.08em",
               whiteSpace: "nowrap",
               textTransform: "uppercase",
-              color: "#1a0800",
+              color: "#8b1a4a",
               lineHeight: 1.1,
             }}>
               MY DIGITAL CLEANING
@@ -275,7 +273,7 @@ export default function WardrobePage() {
                 boxShadow: totalItems >= FREE_ITEM_LIMIT
                   ? "0 0 0 2px rgba(200,40,40,0.40)"
                   : "0 0 0 1.5px rgba(180,100,110,0.28)",
-                color: totalItems >= FREE_ITEM_LIMIT ? "#aa0000" : "#7a3a40",
+                color: totalItems >= FREE_ITEM_LIMIT ? "#aa0000" : "#c2185b",
                 fontWeight: 700, fontSize: 10,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 whiteSpace: "nowrap", cursor: "pointer",
@@ -326,7 +324,7 @@ export default function WardrobePage() {
                     fontSize: Math.max(9, pH(ir, 0.013)),
                     fontWeight: 800,
                     letterSpacing: "0.12em",
-                    color: "#3A2210",
+                    color: "#8b1a4a",
                     fontFamily: "var(--font-display)",
                     textTransform: "uppercase",
                   }}>
@@ -385,56 +383,21 @@ export default function WardrobePage() {
           })}
 
 
-          {/* ── Person icon tap zone ── */}
-          <button
-            onClick={() => navigate("/favorites")}
-            data-testid="button-person-icon"
-            aria-label="View saved looks"
-            style={{
-              position: "absolute",
-              top:    pY(ir, 0.895),
-              left:   pX(ir, 0.115),
-              width:  pW(ir, 0.170),
-              height: pH(ir, 0.080),
-              zIndex: 25,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-            }}
-          />
-
-          {/* ── Lipstick icon tap zone — opens premium upgrade sheet ── */}
-          <button
-            onClick={() => setUpgradeReason("items")}
-            aria-label="Upgrade to premium"
-            style={{
-              position: "absolute",
-              top:    pY(ir, 0.905),
-              left:   pX(ir, 0.755),
-              width:  pW(ir, 0.110),
-              height: pH(ir, 0.065),
-              zIndex: 25,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-            }}
-          />
-
-          {/* ── SAVE circular button — covers the baked-in circle ── */}
+          {/* ── SAVE button ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
             aria-label="Save current case"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.9466) - pW(ir, 0.074),
+              top:    pY(ir, 0.868) - pW(ir, 0.074),
               left:   pX(ir, 0.500)  - pW(ir, 0.074),
               width:  pW(ir, 0.148),
               height: pW(ir, 0.148),
               borderRadius: "50%",
               zIndex: 26,
-              background: "linear-gradient(160deg, #E8D4B0 0%, #B8894E 100%)",
-              border: "2px solid #B8894E",
-              boxShadow: "0 2px 8px rgba(120,80,40,0.25)",
+              background: "linear-gradient(135deg, #f9c3d9 0%, #e8649a 100%)",
+              border: "2px solid #e8649a",
+              boxShadow: "0 2px 10px rgba(232,100,154,0.35)",
               cursor: "pointer",
               display: "flex",
               flexDirection: "column",
@@ -445,8 +408,8 @@ export default function WardrobePage() {
               padding: 0,
             }}
           >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#3A2210", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#3A2210", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CASE 🤎</span>
+            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#fff", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
+            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#fff", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CLEAN 🌸</span>
           </button>
         </>
       )}
@@ -515,9 +478,9 @@ export default function WardrobePage() {
                       disabled={!saveName.trim() || saveOutfit.isPending}
                       style={{
                         flex: 1, height: 40, borderRadius: 20,
-                        border: "2px solid #B8894E",
-                        background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
-                        color: "#3A2210", fontWeight: 800, fontSize: 13,
+                        border: "2px solid #e8649a",
+                        background: "linear-gradient(135deg, #f9c3d9 0%, #e8649a 100%)",
+                        color: "#fff", fontWeight: 800, fontSize: 13,
                         cursor: saveName.trim() ? "pointer" : "default",
                         opacity: saveName.trim() ? 1 : 0.45,
                         fontFamily: "var(--font-display)",

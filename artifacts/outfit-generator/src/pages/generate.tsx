@@ -26,18 +26,17 @@ import { useQueryClient } from "@tanstack/react-query";
 const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
-const PINK  = "#E8D4B0";
+const PINK  = "#e8649a";
 
 const LM = {
-  doorL: 0.182,
-  doorR: 0.776,
+  doorL: 0.10,
+  doorR: 0.92,
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.04, shelfY: 0.22, btnCY: 0.11 },  // OUTFITS    (shelf 1)
+    { sectionTop: 0.23, shelfY: 0.46, btnCY: 0.33 },  // BEAUTY     (shelf 2)
+    { sectionTop: 0.47, shelfY: 0.68, btnCY: 0.56 },  // TOILETRIES (shelf 3)
+    { sectionTop: 0.69, shelfY: 0.84, btnCY: 0.75 },  // ESSENTIALS (below shelves)
   ],
-  // Action bar: from just below FRAGRANCES through the full bottom
   barY:   0.848,
   barBot: 1.000,
 } as const;
@@ -242,12 +241,12 @@ export default function GeneratePage() {
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#fce8ef",
       }}
     >
-      {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
+      {/* ── Background image ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/cleaning-shelves-bg.png"
         alt="My Digital Cleaning"
         style={{
           position: "absolute",
@@ -286,7 +285,7 @@ export default function GeneratePage() {
                 letterSpacing: "0.08em",
                 whiteSpace: "nowrap",
                 textTransform: "uppercase",
-                color: "#1a0800",
+                color: "#8b1a4a",
                 lineHeight: 1.1,
               }}>
                 MY DIGITAL CLEANING
@@ -298,7 +297,7 @@ export default function GeneratePage() {
                 letterSpacing: "0.06em",
                 whiteSpace: "nowrap",
                 textTransform: "uppercase",
-                color: "#1a0800",
+                color: "#8b1a4a",
                 lineHeight: 1.1,
               }}>
                 MATCHMAKER
@@ -335,7 +334,7 @@ export default function GeneratePage() {
                       fontSize: Math.max(9, pH(ir, 0.013)),
                       fontWeight: 800,
                       letterSpacing: "0.12em",
-                      color: "#3A2210",
+                      color: "#8b1a4a",
                       fontFamily: "var(--font-display)",
                       textTransform: "uppercase",
                     }}>
@@ -406,8 +405,8 @@ export default function GeneratePage() {
                   <span style={{
                     fontSize: 10, fontWeight: 800,
                     letterSpacing: "0.13em", textTransform: "uppercase",
-                    color: "#3A2210",
-                    background: "rgba(240,225,196,0.90)",
+                    color: "#8b1a4a",
+                    background: "rgba(255,220,235,0.90)",
                     padding: "3px 11px", borderRadius: 20,
                     whiteSpace: "nowrap",
                   }}>
@@ -417,7 +416,7 @@ export default function GeneratePage() {
               )}
             </AnimatePresence>
 
-            {/* ── Empty suitcase prompt ── */}
+            {/* ── Empty prompt ── */}
             {!hasItems && (
               <div style={{
                 position: "absolute",
@@ -427,15 +426,15 @@ export default function GeneratePage() {
                 textAlign: "center",
                 padding: "14px 22px",
                 borderRadius: 16,
-                background: "rgba(245,237,216,0.92)",
-                border: "1.5px solid rgba(180,140,90,0.40)",
+                background: "rgba(255,220,235,0.92)",
+                border: "1.5px solid rgba(232,100,154,0.35)",
                 boxShadow: "0 4px 18px rgba(0,0,0,0.11)",
                 maxWidth: pW(ir, 0.65),
               }}>
                 <p style={{
                   fontWeight: 800, fontSize: 12,
                   letterSpacing: "0.07em", textTransform: "uppercase",
-                  color: "#3A2210", fontFamily: "var(--font-display)", margin: 0,
+                  color: "#8b1a4a", fontFamily: "var(--font-display)", margin: 0,
                 }}>
                   Your cleaning bag is empty
                 </p>
@@ -460,8 +459,8 @@ export default function GeneratePage() {
                 height: pH(ir, LM.barBot - LM.barY),
                 zIndex: 18,
                 pointerEvents: "none",
-                background: "rgba(245,237,216,0.96)",
-                borderTop: "1px solid rgba(180,140,90,0.25)",
+                background: "rgba(255,220,235,0.96)",
+                borderTop: "1px solid rgba(232,100,154,0.20)",
               }}
             />
 
@@ -493,11 +492,11 @@ export default function GeneratePage() {
                     disabled={!hasItems}
                     style={{
                       width: "100%", height: 52, borderRadius: 28,
-                      border: "2.5px solid #B8894E",
+                      border: "2.5px solid #e8649a",
                       background: hasItems
-                        ? "linear-gradient(to bottom, #E8D4B0, #B8894E)"
-                        : "rgba(200,175,140,0.32)",
-                      color: hasItems ? "#3A2210" : "#7A5A30",
+                        ? "linear-gradient(135deg, #f9c3d9 0%, #e8649a 100%)"
+                        : "rgba(240,190,215,0.32)",
+                      color: hasItems ? "#fff" : "#b06080",
                       fontWeight: 800, fontSize: 16,
                       letterSpacing: "-0.01em", textTransform: "uppercase",
                       whiteSpace: "nowrap",
@@ -523,8 +522,8 @@ export default function GeneratePage() {
                       padding: "0 24px", height: 44,
                       alignItems: "center", justifyContent: "center",
                       borderRadius: 24,
-                      background: "rgba(240,225,196,0.85)",
-                      border: "1.5px solid rgba(180,140,90,0.28)",
+                      background: "rgba(255,220,235,0.85)",
+                      border: "1.5px solid rgba(232,100,154,0.28)",
                     }}
                   >
                     {[0, 1, 2].map(i => (
@@ -561,9 +560,9 @@ export default function GeneratePage() {
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
                         height: 54, borderRadius: 28,
-                        border: "2.5px solid #B8894E",
-                        background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
-                        color: "#4A3A3A",
+                        border: "2.5px solid #e8649a",
+                        background: "linear-gradient(135deg, #f9c3d9 0%, #e8649a 100%)",
+                        color: "#fff",
                         fontFamily: "var(--font-display)",
                         fontWeight: 800, fontSize: 14,
                         letterSpacing: "-0.01em", textTransform: "uppercase",
@@ -585,9 +584,9 @@ export default function GeneratePage() {
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
                         height: 54, borderRadius: 28,
-                        border: "2.5px solid #B8894E",
+                        border: "2.5px solid #e8649a",
                         background: canSave ? "#fff" : "rgba(240,240,240,0.80)",
-                        color: "#3A2210",
+                        color: "#8b1a4a",
                         fontFamily: "var(--font-display)",
                         fontWeight: 800, fontSize: 14,
                         letterSpacing: "-0.01em", textTransform: "uppercase",
@@ -624,9 +623,9 @@ export default function GeneratePage() {
                       onKeyDown={e => e.key === "Enter" && handleSave()}
                       style={{
                         flex: 1, height: 38, borderRadius: 20, padding: "0 14px",
-                        fontSize: 13, fontWeight: 600, color: "#3A2210",
-                        background: "rgba(245,237,216,0.98)",
-                        border: "1.5px solid rgba(180,140,90,0.50)",
+                        fontSize: 13, fontWeight: 600, color: "#8b1a4a",
+                        background: "rgba(255,230,240,0.98)",
+                        border: "1.5px solid rgba(232,100,154,0.40)",
                         boxShadow: "0 3px 12px rgba(0,0,0,0.13)",
                         outline: "none",
                       }}
@@ -635,8 +634,8 @@ export default function GeneratePage() {
                       onClick={() => { setIsSaveOpen(false); setSaveName(""); }}
                       style={{
                         width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-                        background: "rgba(245,237,216,0.97)",
-                        border: "1.5px solid rgba(180,140,90,0.36)",
+                        background: "rgba(255,230,240,0.97)",
+                        border: "1.5px solid rgba(232,100,154,0.28)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         cursor: "pointer",
                       }}
@@ -648,8 +647,8 @@ export default function GeneratePage() {
                       disabled={!saveName.trim() || saveOutfit.isPending}
                       style={{
                         padding: "0 14px", height: 36, borderRadius: 20, flexShrink: 0,
-                        background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
-                        color: "#3A2210", fontWeight: 700, fontSize: 13, border: "1.5px solid #B8894E",
+                        background: "linear-gradient(135deg, #f9c3d9 0%, #e8649a 100%)",
+                        color: "#fff", fontWeight: 700, fontSize: 13, border: "1.5px solid #e8649a",
                         boxShadow: "0 3px 10px rgba(120,80,40,0.30)",
                         opacity: (!saveName.trim() || saveOutfit.isPending) ? 0.42 : 1,
                         cursor: "pointer",
