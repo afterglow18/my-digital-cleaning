@@ -26,7 +26,7 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
-import { processClothingImage } from "@/lib/processImage";
+import { processClothingImage, cancelBackgroundRemoval } from "@/lib/processImage";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -351,6 +351,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   // ── User chose "Keep Original" while cleaning was still running ───────────
   const handleCancelCleaning = () => {
     cancelledRef.current = true;
+    cancelBackgroundRemoval(); // terminates the worker immediately — no wasted CPU
     setBgProcessing(false);
     setBgError(null);
   };

@@ -48,7 +48,7 @@ export default defineConfig({
       : []),
   ],
   optimizeDeps: {
-    exclude: ['@imgly/background-removal', 'onnxruntime-web'],
+    exclude: ['@imgly/background-removal'],
   },
   resolve: {
     alias: {

@@ -27,49 +27,73 @@
  * progress UI (e.g. a decelerating ramp) independently.
  *
  * THREADING FIX (iOS / WKWebView):
- *   @imgly/background-removal forces ort.env.wasm.proxy = false internally,
- *   which keeps ONNX inference on the main JS thread and freezes the UI.
- *   We lock the property via Object.defineProperty so imgly's write is
- *   silently ignored and inference runs in a sub-worker instead.
- *   numThreads = 1 avoids the SharedArrayBuffer crash on iOS Safari.
- *   onnxruntime-web is imported dynamically (not at module parse time) to
- *   prevent Vite pre-bundling from triggering a full page reload mid-session.
+ *   The entire removeBackground() call runs inside a dedicated Web Worker
+ *   (bgRemovalWorker.ts) so ONNX inference never touches the main JS thread.
+ *   This replaces the earlier Object.defineProperty/proxy approach, which
+ *   required ORT's own proxy worker file to be served from the same origin —
+ *   that file isn't available locally and caused every inference to throw.
+ *   The worker is terminated immediately on completion or cancellation,
+ *   which also gives us true cancellation (no wasted CPU after "Keep Original").
  */
-import { removeBackground } from "@imgly/background-removal";
 
-const CDN_VERSION = "1.7.0";
-const PUBLIC_PATH = `https://cdn.jsdelivr.net/npm/@imgly/background-removal@${CDN_VERSION}/dist/web/`;
+// Module-level handle so cancelBackgroundRemoval() can reach the live worker.
+let _activeWorker: Worker | null = null;
 
-// ── ONNX Runtime Web worker-proxy fix ────────────────────────────────────────
-// @imgly/background-removal internally does `ort.env.wasm.proxy = false` right
-// before creating its inference session (it only enables the proxy when WebGPU
-// is available, which WKWebView on iOS doesn't support).  That assignment keeps
-// inference on the main thread and freezes the UI for 5–30 s.
-//
-// Fix: use Object.defineProperty with a no-op setter so imgly's write is
-// silently ignored and the value stays true → inference runs in a sub-worker.
-// numThreads = 1 avoids the SharedArrayBuffer WASM-threading crash on iOS.
-//
-// onnxruntime-web is imported dynamically (not at module parse time) to
-// prevent Vite from pre-bundling it, which caused a full page reload that
-// corrupted React's internal dispatcher on first use.
-
-let _ortReady: Promise<void> | null = null;
-
-function ensureOrtConfigured(): Promise<void> {
-  if (!_ortReady) {
-    _ortReady = (async () => {
-      // @ts-ignore — types.d.ts exists but isn't wired through package.json "exports"
-      const ort = await import("onnxruntime-web");
-      Object.defineProperty(ort.env.wasm, "proxy", {
-        get: () => true,
-        set: () => {},        // blocks imgly from setting it back to false
-        configurable: true,  // allows re-definition if ort is reloaded
-      });
-      ort.env.wasm.numThreads = 1; // iOS Safari has no SharedArrayBuffer
-    })();
+/**
+ * Terminate any in-flight background-removal worker immediately.
+ * Safe to call even when no removal is running.
+ * Called by ItemDetailsSheet when the user taps "Keep Original" mid-process.
+ */
+export function cancelBackgroundRemoval(): void {
+  if (_activeWorker) {
+    _activeWorker.terminate();
+    _activeWorker = null;
   }
-  return _ortReady;
+}
+
+/** Spawn a worker, run removeBackground, resolve with the raw PNG blob. */
+function runRemovalInWorker(
+  blob: Blob,
+  onProgress?: ProgressCallback,
+): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    const worker = new Worker(
+      new URL("./bgRemovalWorker.ts", import.meta.url),
+      { type: "module" },
+    );
+    _activeWorker = worker;
+
+    worker.onmessage = (ev) => {
+      const msg = ev.data as
+        | { type: "progress"; current: number; total: number }
+        | { type: "done"; blob: Blob }
+        | { type: "error"; message: string };
+
+      if (msg.type === "progress") {
+        onProgress?.(
+          msg.total > 0
+            ? Math.min(80, Math.round((msg.current / msg.total) * 80))
+            : -1,
+        );
+      } else if (msg.type === "done") {
+        _activeWorker = null;
+        worker.terminate();
+        resolve(msg.blob);
+      } else {
+        _activeWorker = null;
+        worker.terminate();
+        reject(new Error(msg.message));
+      }
+    };
+
+    worker.onerror = (err) => {
+      _activeWorker = null;
+      worker.terminate();
+      reject(new Error(err.message ?? "Worker error"));
+    };
+
+    worker.postMessage({ blob });
+  });
 }
 
 export type ProgressCallback = (percent: number) => void;
@@ -136,22 +160,8 @@ export async function processClothingImage(
   timeoutMs = 90_000,
 ): Promise<Blob> {
   const run = async () => {
-    // Ensure ONNX runtime is configured for worker-proxy mode before imgly
-    // gets a chance to force proxy = false on the main thread.
-    await ensureOrtConfigured();
-
-    const bgFree = await removeBackground(input, {
-      publicPath: PUBLIC_PATH,
-      model: "isnet_quint8",
-      output: { format: "image/png", quality: 1 },
-      // total is always 0 due to empty resources.json — treat as a pulse only
-      progress: (_key: string, current: number, total: number) => {
-        if (onProgress) {
-          onProgress(total > 0 ? Math.min(80, Math.round((current / total) * 80)) : -1);
-        }
-      },
-    });
-
+    // Runs entirely in a Web Worker — main thread stays free during inference.
+    const bgFree = await runRemovalInWorker(input, onProgress);
     onProgress?.(-1); // pulse: inference done, cropping next
     return cropAndCenterPng(bgFree);
   };
