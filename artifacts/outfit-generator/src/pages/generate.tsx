@@ -417,7 +417,7 @@ export default function GeneratePage() {
                     padding: "3px 11px", borderRadius: 20,
                     whiteSpace: "nowrap",
                   }}>
-                    Generating your look…
+                    Building your clean…
                   </span>
                 </motion.div>
               )}
