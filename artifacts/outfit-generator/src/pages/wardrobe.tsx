@@ -48,9 +48,9 @@ type RowKey   = "outfits" | "beauty" | "essentials";
 type Category = "outfits" | "beauty" | "essentials";
 
 const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: string | null; headingTopFrac?: number }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies", headingTopFrac: 0.280 },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools",    headingTopFrac: 0.500 },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas",    headingTopFrac: 0.713 },
+  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies", headingTopFrac: 0.266 },
+  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools",    headingTopFrac: 0.486 },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas",    headingTopFrac: 0.699 },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────

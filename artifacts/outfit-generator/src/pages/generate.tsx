@@ -73,9 +73,9 @@ type RowKey = "outfits" | "beauty" | "essentials";
 type Phase  = "idle" | "spinning" | "result";
 
 const ROWS: { key: RowKey; shelfHeading: string; headingTopFrac?: number }[] = [
-  { key: "outfits",    shelfHeading: "Supplies", headingTopFrac: 0.280 },
-  { key: "beauty",     shelfHeading: "Tools",    headingTopFrac: 0.500 },
-  { key: "essentials", shelfHeading: "Areas",    headingTopFrac: 0.713 },
+  { key: "outfits",    shelfHeading: "Supplies", headingTopFrac: 0.266 },
+  { key: "beauty",     shelfHeading: "Tools",    headingTopFrac: 0.486 },
+  { key: "essentials", shelfHeading: "Areas",    headingTopFrac: 0.699 },
 ];
 
 const MIN_SPIN_MS = 1600;
