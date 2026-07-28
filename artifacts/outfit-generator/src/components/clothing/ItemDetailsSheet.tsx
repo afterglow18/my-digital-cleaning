@@ -342,8 +342,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     } catch (err) {
       if (cancelledRef.current) return; // user cancelled — don't show error
       console.error("Background removal failed:", err);
-      // Silently open the compare overlay with original only — no red error
-      setCompareData({ originalUrl: srcPath, cleanedUrl: null as unknown as string });
+      setBgError("Could not remove background. Please try again.");
     } finally {
       setBgProcessing(false);
     }
@@ -545,7 +544,10 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                 <Sparkles className="w-3.5 h-3.5" />
                 {bgProcessing ? "Processing…" : "Clean Up Photo ✨"}
               </button>
-              {liveImagePath && !bgProcessing && (
+              {bgError && (
+                <span className="text-xs text-red-600 font-medium flex-1">{bgError}</span>
+              )}
+              {!bgError && liveImagePath && !bgProcessing && (
                 <span className="text-xs text-green-700 font-medium">Photo updated ✓</span>
               )}
             </div>
