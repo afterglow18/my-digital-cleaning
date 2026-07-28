@@ -305,7 +305,7 @@ export default function GeneratePage() {
                 color: "#8b1a4a",
                 lineHeight: 1.1,
               }}>
-                MATCHMAKER
+                CLEANING PLAN
               </div>
             </div>
 

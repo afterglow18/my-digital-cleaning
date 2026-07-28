@@ -161,9 +161,9 @@ export default function SavedPage() {
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
       <header className="mb-6">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
+        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">My Cleanings</h1>
         <div className="flex items-center justify-between">
-          <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
+          <p className="font-medium text-muted-foreground text-sm">Your saved cleans.</p>
 
           {isFree && outfitCount > 0 && (
             <button
@@ -413,9 +413,9 @@ export default function SavedPage() {
           <div className="w-14 h-14 bg-accent rounded-full flex items-center justify-center border-2 border-black mb-4">
             <Bookmark className="w-7 h-7" />
           </div>
-          <h3 className="font-display font-bold text-xl mb-2">No looks saved yet.</h3>
+          <h3 className="font-display font-bold text-xl mb-2">No cleanings saved yet.</h3>
           <p className="text-sm font-medium text-muted-foreground">
-            Head to your Cleaning, spin the slots, and save cases you love.
+            Head to Generate, spin it, and save the cleans you love.
           </p>
         </div>
       )}

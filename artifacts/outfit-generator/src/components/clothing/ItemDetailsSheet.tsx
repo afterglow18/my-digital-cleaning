@@ -614,7 +614,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               options={CATEGORY_OPTIONS}
             />
             <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Used</span>
               <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
                 {item.timesWorn ?? 0}
               </div>
