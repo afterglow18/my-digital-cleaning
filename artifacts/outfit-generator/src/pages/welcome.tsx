@@ -97,7 +97,7 @@ export default function WelcomePage({ onEnter }: Props) {
             pointerEvents: exiting ? "none" : "auto",
           }}
         >
-          Open App ✨
+          Start Cleaning 🧹
         </motion.button>
       </div>
 
