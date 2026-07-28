@@ -442,22 +442,12 @@ export default function WardrobePage() {
               height: pW(ir, 0.148),
               borderRadius: "50%",
               zIndex: 26,
-              background: "linear-gradient(135deg, #f9c3d9 0%, #e8649a 100%)",
-              border: "2px solid #e8649a",
-              boxShadow: "0 2px 10px rgba(232,100,154,0.35)",
+              background: "transparent",
+              border: "none",
               cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0,
-              lineHeight: 1.15,
               padding: 0,
             }}
-          >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#fff", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#fff", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CLEAN 🌸</span>
-          </button>
+          />
         </>
       )}
 
