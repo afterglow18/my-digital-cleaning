@@ -32,7 +32,11 @@ import { processClothingImage, cancelBackgroundRemoval } from "@/lib/processImag
 
 const SEASON_OPTIONS    = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
 const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
-const CATEGORY_OPTIONS  = ["outfits", "beauty", "toiletries", "essentials"];
+const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: "outfits",    label: "Supplies" },
+  { value: "beauty",     label: "Tools"    },
+  { value: "essentials", label: "Areas"    },
+];
 
 function Field({
   label, value, onChange, placeholder, type = "text",
@@ -58,10 +62,13 @@ function Field({
   );
 }
 
+type SelectOption = string | { value: string; label: string };
+
 function SelectField({
   label, value, onChange, options,
 }: {
-  label: string; value: string; onChange: (v: string) => void; options: string[];
+  label: string; value: string; onChange: (v: string) => void;
+  options: SelectOption[];
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -76,9 +83,11 @@ function SelectField({
                      text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary
                      cursor-pointer"
         >
-          {options.map((o) => (
-            <option key={o} value={o}>{o || `— ${label} —`}</option>
-          ))}
+          {options.map((o) => {
+            const v = typeof o === "string" ? o : o.value;
+            const l = typeof o === "string" ? (o || `— ${label} —`) : o.label;
+            return <option key={v} value={v}>{l}</option>;
+          })}
         </select>
         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-black/40" />
       </div>
