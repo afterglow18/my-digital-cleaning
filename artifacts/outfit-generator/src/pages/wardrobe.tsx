@@ -212,15 +212,11 @@ export default function WardrobePage() {
   const ready     = ir.width > 0;
 
   // ── Section layout helpers ────────────────────────────────────────────────
-  // Carousel starts just below the shelf heading, not at sectionTop
-  const HEADING_GAP = 0.024; // fraction of image height to clear below heading text
+  // Carousel fills the full section (sectionTop → shelfY); heading overlay sits
+  // on top via z-index so photos reach all the way down to the shelf surface.
   const sectionHeights = ready
-    ? ROWS.map(({ headingTopFrac }, i) => {
-        const lm = LM.rows[i];
-        const carouselTop = (headingTopFrac ?? lm.sectionTop + 0.01) + HEADING_GAP;
-        return pH(ir, lm.shelfY - carouselTop);
-      })
-    : ROWS.map(() => 0);
+    ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
+    : LM.rows.map(() => 0);
 
   // Use the smallest row height so all carousels show photos at the same size
   const uniformPhotoH = Math.max(0, Math.min(...sectionHeights) - 4);
@@ -313,9 +309,8 @@ export default function WardrobePage() {
             const lm      = LM.rows[rowIdx];
             const items   = rowData[key];
 
-            const carouselTopFrac = (headingTopFrac ?? lm.sectionTop + 0.01) + HEADING_GAP;
-            const secTop  = pY(ir, carouselTopFrac);
-            const secH    = pH(ir, lm.shelfY - carouselTopFrac);
+            const secTop  = pY(ir, lm.sectionTop);
+            const secH    = pH(ir, lm.shelfY - lm.sectionTop);
             const carLeft = pX(ir, LM.doorL);
             const carW    = pW(ir, LM.doorR - LM.doorL);
 
