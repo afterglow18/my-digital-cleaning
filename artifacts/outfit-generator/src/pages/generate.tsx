@@ -233,6 +233,9 @@ export default function GeneratePage() {
       })
     : ROWS.map(() => 0);
 
+  // Same uniform size as wardrobe page — smallest section height drives all rows
+  const uniformPhotoH = Math.max(0, Math.min(...sectionHeights) - 4);
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     // On phone: leave 90px for bottom nav. On iPad: sidebar takes no vertical space.
@@ -358,7 +361,7 @@ export default function GeneratePage() {
                         ref={rowRefs[key]}
                         items={items}
                         onCenteredItem={setCentredHandlers[key]}
-                        maxPhotoH={Math.max(0, sectionHeights[rowIdx] - 4)}
+                        maxPhotoH={uniformPhotoH}
                         disableSwipe
                       />
                     </div>
