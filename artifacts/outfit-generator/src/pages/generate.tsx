@@ -73,9 +73,9 @@ type RowKey = "outfits" | "beauty" | "essentials";
 type Phase  = "idle" | "spinning" | "result";
 
 const ROWS: { key: RowKey; shelfHeading: string; headingTopFrac?: number }[] = [
-  { key: "outfits",    shelfHeading: "Supplies", headingTopFrac: 0.20 },
-  { key: "beauty",     shelfHeading: "Tools",    headingTopFrac: 0.41 },
-  { key: "essentials", shelfHeading: "Areas", headingTopFrac: 0.54 },
+  { key: "outfits",    shelfHeading: "Supplies", headingTopFrac: 0.280 },
+  { key: "beauty",     shelfHeading: "Tools",    headingTopFrac: 0.500 },
+  { key: "essentials", shelfHeading: "Areas",    headingTopFrac: 0.713 },
 ];
 
 const MIN_SPIN_MS = 1600;
@@ -316,6 +316,7 @@ export default function GeneratePage() {
                     top: pY(ir, headingTopFrac ?? lm.sectionTop + 0.01),
                     left: carLeft,
                     width: carW,
+                    transform: "translateY(-50%)",
                     zIndex: 12,
                     textAlign: "center",
                     pointerEvents: "none",

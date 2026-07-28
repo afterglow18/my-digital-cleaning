@@ -48,9 +48,9 @@ type RowKey   = "outfits" | "beauty" | "essentials";
 type Category = "outfits" | "beauty" | "essentials";
 
 const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: string | null; headingTopFrac?: number }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies", headingTopFrac: 0.20 },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools",    headingTopFrac: 0.41 },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas", headingTopFrac: 0.54 },
+  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies", headingTopFrac: 0.280 },
+  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools",    headingTopFrac: 0.500 },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas",    headingTopFrac: 0.713 },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -328,6 +328,7 @@ export default function WardrobePage() {
                     top:       pY(ir, headingTopFrac ?? lm.sectionTop + 0.01),
                     left:      carLeft,
                     width:     carW,
+                    transform: "translateY(-50%)",
                     zIndex:    24,
                     textAlign: "center",
                     pointerEvents: "none",
