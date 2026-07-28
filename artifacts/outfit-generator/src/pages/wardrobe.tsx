@@ -47,11 +47,11 @@ import { createClothingItem } from "@/lib/localDB";
 type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
-const ROWS: { key: RowKey; btnLabel: string }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS"    },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY"     },
-  { key: "toiletries", btnLabel: "+ ADD TOILETRIES" },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS" },
+const ROWS: { key: RowKey; btnLabel: string; shelfHeading: string | null }[] = [
+  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    shelfHeading: "Supplies" },
+  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     shelfHeading: "Tools"    },
+  { key: "toiletries", btnLabel: "+ ADD TOILETRIES", shelfHeading: "Areas"    },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", shelfHeading: null       },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -269,16 +269,15 @@ export default function WardrobePage() {
             overflow: "hidden",
           }}>
             <div style={{
-              fontFamily: "var(--font-display, serif)",
-              fontWeight: 900,
-              fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerW * 0.040)),
-              letterSpacing: "0.08em",
+              fontFamily: "'Dancing Script', cursive",
+              fontWeight: 700,
+              fontSize: Math.max(20, Math.min(pW(ir, 0.072), ir.containerW * 0.075)),
+              letterSpacing: "0.01em",
               whiteSpace: "nowrap",
-              textTransform: "uppercase",
               color: "#8b1a4a",
               lineHeight: 1.1,
             }}>
-              MY DIGITAL CLEANING
+              My Digital Cleaning
             </div>
           </div>
 
@@ -310,7 +309,7 @@ export default function WardrobePage() {
           )}
 
           {/* ── 4 shelf rows ── */}
-          {ROWS.map(({ key, btnLabel }, rowIdx) => {
+          {ROWS.map(({ key, btnLabel, shelfHeading }, rowIdx) => {
             const lm      = LM.rows[rowIdx];
             const items   = rowData[key];
 
@@ -327,6 +326,32 @@ export default function WardrobePage() {
 
             return (
               <React.Fragment key={key}>
+
+                {/* ── Shelf heading (Supplies / Tools / Areas) ── */}
+                {shelfHeading && (
+                  <div style={{
+                    position: "absolute",
+                    top:       pY(ir, lm.shelfY),
+                    left:      carLeft,
+                    width:     carW,
+                    transform: "translateY(-50%)",
+                    zIndex:    24,
+                    textAlign: "center",
+                    pointerEvents: "none",
+                  }}>
+                    <span style={{
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 800,
+                      fontSize:   Math.max(10, pH(ir, 0.018)),
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "#fff",
+                      textShadow: "0 1px 4px rgba(0,0,0,0.18)",
+                    }}>
+                      {shelfHeading}
+                    </span>
+                  </div>
+                )}
 
                 {/* ── Category label (tappable → add photo) ── */}
                 <button

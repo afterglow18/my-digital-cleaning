@@ -279,16 +279,15 @@ export default function GeneratePage() {
               overflow: "hidden",
             }}>
               <div style={{
-                fontFamily: "var(--font-display, serif)",
-                fontWeight: 900,
-                fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerH * 0.025)),
-                letterSpacing: "0.08em",
+                fontFamily: "'Dancing Script', cursive",
+                fontWeight: 700,
+                fontSize: Math.max(20, Math.min(pW(ir, 0.072), ir.containerH * 0.060)),
+                letterSpacing: "0.01em",
                 whiteSpace: "nowrap",
-                textTransform: "uppercase",
                 color: "#8b1a4a",
                 lineHeight: 1.1,
               }}>
-                MY DIGITAL CLEANING
+                My Digital Cleaning
               </div>
               <div style={{
                 fontFamily: "var(--font-display, serif)",
