@@ -47,10 +47,10 @@ import { createClothingItem } from "@/lib/localDB";
 type RowKey   = "outfits" | "beauty" | "essentials";
 type Category = "outfits" | "beauty" | "essentials";
 
-const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: string | null }[] = [
+const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: string | null; headingTopFrac?: number }[] = [
   { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies" },
   { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools"    },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas"    },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas", headingTopFrac: 0.54 },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ export default function WardrobePage() {
           )}
 
           {/* ── 4 shelf rows ── */}
-          {ROWS.map(({ key, btnLabel, showLabel, shelfHeading }, rowIdx) => {
+          {ROWS.map(({ key, btnLabel, showLabel, shelfHeading, headingTopFrac }, rowIdx) => {
             const lm      = LM.rows[rowIdx];
             const items   = rowData[key];
 
@@ -325,7 +325,7 @@ export default function WardrobePage() {
                 {shelfHeading && (
                   <div style={{
                     position: "absolute",
-                    top:       pY(ir, lm.sectionTop + 0.01),
+                    top:       pY(ir, headingTopFrac ?? lm.sectionTop + 0.01),
                     left:      carLeft,
                     width:     carW,
                     zIndex:    24,
