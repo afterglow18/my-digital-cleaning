@@ -90,15 +90,15 @@ function TierCard({
       onClick={() => onSelect(id)}
       className="flex-1 flex flex-col rounded-xl border-[3px] transition-all relative overflow-hidden text-left"
       style={{
-        borderColor: selected ? "#000" : "#C9BAA5",
-        background:  selected ? "hsl(35 55% 82%)" : "hsl(35 30% 93%)",
-        boxShadow:   selected ? "3px 3px 0px 0px rgba(0,0,0,1)" : "none",
+        borderColor: selected ? "#d4006e" : "rgba(255,255,255,0.6)",
+        background:  selected ? "#fff" : "rgba(255,255,255,0.75)",
+        boxShadow:   selected ? "3px 3px 0px 0px rgba(180,0,100,0.45)" : "none",
       }}
     >
       {best && (
         <span
           className="absolute top-0 right-0 text-[8px] font-bold uppercase tracking-tight px-1.5 py-0.5 rounded-bl-lg"
-          style={{ background: "#C0390B", color: "#fff" }}
+          style={{ background: "#8b0050", color: "#fff" }}
         >
           BEST ★ VALUE
         </span>
@@ -183,7 +183,27 @@ export function UpgradeSheet({ reason, onClose }: Props) {
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 28, stiffness: 240 }}
       className="fixed inset-0 z-[80] flex flex-col max-w-md mx-auto"
-      style={{ background: "#F8F4ED" }}
+      style={{
+        backgroundColor: "#d4006e",
+        backgroundImage: `
+          repeating-linear-gradient(90deg,
+            transparent 0px, transparent 14px,
+            rgba(255,255,255,0.22) 14px, rgba(255,255,255,0.22) 18px,
+            transparent 18px, transparent 34px,
+            rgba(120,0,60,0.35) 34px, rgba(120,0,60,0.35) 38px,
+            transparent 38px, transparent 50px,
+            rgba(255,255,255,0.22) 50px, rgba(255,255,255,0.22) 54px
+          ),
+          repeating-linear-gradient(0deg,
+            transparent 0px, transparent 14px,
+            rgba(255,255,255,0.22) 14px, rgba(255,255,255,0.22) 18px,
+            transparent 18px, transparent 34px,
+            rgba(120,0,60,0.35) 34px, rgba(120,0,60,0.35) 38px,
+            transparent 38px, transparent 50px,
+            rgba(255,255,255,0.22) 50px, rgba(255,255,255,0.22) 54px
+          )
+        `,
+      }}
     >
       {/* Close button */}
       <div className="flex justify-end px-4 pb-0 flex-shrink-0"
@@ -191,8 +211,8 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         <button
           onClick={onClose}
           aria-label="Close"
-          className="w-9 h-9 rounded-full border-2 border-black flex items-center justify-center
-                     bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+          className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center
+                     bg-white/90 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]
                      active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
         >
           <X className="w-4 h-4" />
@@ -204,26 +224,29 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
         {/* Headline */}
         <div>
-          <h1 className="font-display font-bold text-[2.1rem] uppercase tracking-tight leading-[0.88]">
+          <h1 className="font-display font-bold text-[2.1rem] uppercase tracking-tight leading-[0.88]"
+              style={{ color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
             {HEADLINES[reason]}
           </h1>
-          <p className="text-xs font-semibold text-black/45 mt-1.5" style={{ whiteSpace: "pre-line" }}>
+          <p className="text-xs font-semibold mt-1.5" style={{ whiteSpace: "pre-line", color: "rgba(255,255,255,0.85)" }}>
             {SUBTITLES[reason]}
           </p>
         </div>
 
         {/* Features card */}
-        <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#111" }}>
+        <div className="rounded-2xl border-[3px] overflow-hidden"
+             style={{ background: "rgba(255,255,255,0.95)", borderColor: "rgba(255,255,255,0.9)",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.20)" }}>
           <div className="px-4 py-4 flex flex-col gap-2">
             <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
-               style={{ color: "hsl(35 55% 82%)" }}>
+               style={{ color: "#d4006e" }}>
               Unlimited cleaning bags
             </p>
             <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
-               style={{ color: "hsl(35 55% 82%)" }}>
+               style={{ color: "#d4006e" }}>
               Unlimited saved outfits
             </p>
-            <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
+            <p className="text-xs font-medium mt-1 leading-snug" style={{ color: "rgba(180,0,100,0.65)" }}>
               Your entire wardrobe, beautifully packed — forever.
             </p>
           </div>
@@ -231,7 +254,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
         {/* Plan selector */}
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-widest text-black/35 text-center mb-1.5">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-center mb-1.5" style={{ color: "rgba(255,255,255,0.8)" }}>
             Choose Your Plan
           </p>
           <div className="flex gap-2">
@@ -265,12 +288,13 @@ export function UpgradeSheet({ reason, onClose }: Props) {
           onClick={handlePurchase}
           disabled={isDisabled}
           className="w-full py-3.5 rounded-2xl font-display font-bold text-lg uppercase
-                     tracking-tight border-[3px] border-black text-black
+                     tracking-tight border-[3px] border-white text-white
                      active:translate-x-0.5 active:translate-y-0.5 transition-all
-                     disabled:opacity-60 disabled:cursor-not-allowed bg-primary
+                     disabled:opacity-60 disabled:cursor-not-allowed
                      flex items-center justify-center gap-2"
           style={{
-            boxShadow: isDisabled ? "none" : "4px 4px 0px 0px rgba(0,0,0,1)",
+            background: "#8b0050",
+            boxShadow: isDisabled ? "none" : "4px 4px 0px 0px rgba(0,0,0,0.35)",
           }}
         >
           {isDisabled && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -285,7 +309,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
         <button
           onClick={onClose}
-          className="text-sm font-semibold text-black/35 text-center hover:text-black/55 transition-colors"
+          className="text-sm font-semibold text-center transition-colors" style={{ color: "rgba(255,255,255,0.7)" }}
         >
           Maybe Later
         </button>
