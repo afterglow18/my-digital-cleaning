@@ -47,11 +47,11 @@ import { createClothingItem } from "@/lib/localDB";
 type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
-const ROWS: { key: RowKey; btnLabel: string; shelfHeading: string | null }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    shelfHeading: "Supplies" },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     shelfHeading: "Tools"    },
-  { key: "toiletries", btnLabel: "+ ADD TOILETRIES", shelfHeading: "Areas"    },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", shelfHeading: null       },
+const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: string | null }[] = [
+  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies" },
+  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools"    },
+  { key: "toiletries", btnLabel: "+ ADD TOILETRIES", showLabel: true,  shelfHeading: "Areas"    },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: true,  shelfHeading: null       },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -309,7 +309,7 @@ export default function WardrobePage() {
           )}
 
           {/* ── 4 shelf rows ── */}
-          {ROWS.map(({ key, btnLabel, shelfHeading }, rowIdx) => {
+          {ROWS.map(({ key, btnLabel, showLabel, shelfHeading }, rowIdx) => {
             const lm      = LM.rows[rowIdx];
             const items   = rowData[key];
 
@@ -354,6 +354,7 @@ export default function WardrobePage() {
                 )}
 
                 {/* ── Category label (tappable → add photo) ── */}
+                {showLabel && (
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
@@ -382,6 +383,7 @@ export default function WardrobePage() {
                     {btnLabel}
                   </span>
                 </button>
+                )}
 
                 {/* ── Item carousel — fills the section between buttons ── */}
                 {items.length > 0 && (
