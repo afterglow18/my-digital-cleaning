@@ -36,6 +36,7 @@ export default function WelcomePage({ onEnter }: Props) {
         alignItems: "center",
         background: "#fce8ef",
         overflow: "hidden",
+        paddingTop: "env(safe-area-inset-top, 44px)",
       }}
     >
       {/* ── Hero image ── */}
