@@ -64,8 +64,8 @@ const NAV_H = 90;
 // shelfY = exact top-surface of the shelf board (items rest here, bottom-anchored).
 // Row 4 occupies the floor/accessory area below the lowest shelf.
 const LM = {
-  doorL: 0.10,   // left usable boundary
-  doorR: 0.92,   // right usable boundary
+  doorL: 0.14,   // left usable boundary (clear of window glow, calibrated for iPad+phone)
+  doorR: 0.88,   // right usable boundary (clear of right-side plant at shelf 1 level)
 
   rows: [
     { sectionTop: 0.13, shelfY: 0.267, btnCY: 0.20 },  // OUTFITS    (shelf 1 surface at 26.7%)
