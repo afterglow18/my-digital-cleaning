@@ -424,27 +424,6 @@ export default function WardrobePage() {
                   </div>
                 )}
 
-                {/* ── ADD button ──────────────────────────────────────────
-                    Always a transparent tap zone sitting exactly over the
-                    baked-in pink pill in the background image (at btnCY).
-                    The carousel lives BELOW the pill (sectionTop > btnCY),
-                    so this zone is never obscured by items.               */}
-                <button
-                  onClick={addHandlers[key]}
-                  aria-label={btnLabel}
-                  data-testid={`add-btn-${key}`}
-                  style={{
-                    position: "absolute",
-                    top:    btnCY - btnH / 2,
-                    left:   carLeft,
-                    width:  carW,
-                    height: btnH,
-                    zIndex: 22,
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                />
 
               </React.Fragment>
             );
