@@ -51,7 +51,7 @@ const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: s
   { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies" },
   { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools"    },
   { key: "toiletries", btnLabel: "+ ADD TOILETRIES", showLabel: true,  shelfHeading: "Areas"    },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: true,  shelfHeading: null       },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: null       },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
