@@ -430,6 +430,46 @@ export default function WardrobePage() {
           })}
 
 
+          {/* ── Spray bottle (left) → saved cleans ── */}
+          <button
+            onClick={() => navigate("/saved")}
+            aria-label="Saved cleans"
+            data-testid="btn-spray-saved"
+            style={{
+              position: "absolute",
+              top:    pY(ir, 0.868),
+              left:   pX(ir, 0.100),
+              width:  pW(ir, 0.175),
+              height: pH(ir, 0.110),
+              borderRadius: "50%",
+              zIndex: 26,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          />
+
+          {/* ── Broom (right) → matchmaker ── */}
+          <button
+            onClick={() => navigate("/generate")}
+            aria-label="Matchmaker"
+            data-testid="btn-broom-generate"
+            style={{
+              position: "absolute",
+              top:    pY(ir, 0.868),
+              left:   pX(ir, 0.710),
+              width:  pW(ir, 0.175),
+              height: pH(ir, 0.110),
+              borderRadius: "50%",
+              zIndex: 26,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          />
+
           {/* ── SAVE button ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
