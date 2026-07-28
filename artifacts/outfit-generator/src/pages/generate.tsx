@@ -222,8 +222,14 @@ export default function GeneratePage() {
 
   // ── Section layout helpers — per-row, same as wardrobe.tsx ──────────────
   const sectionHeights = ready
-    ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
-    : LM.rows.map(() => 0);
+    ? ROWS.map(({ headingTopFrac }, i) => {
+        const top  = headingTopFrac ?? LM.rows[i].sectionTop;
+        const next = i + 1 < ROWS.length
+          ? (ROWS[i + 1].headingTopFrac ?? LM.rows[i + 1].sectionTop)
+          : LM.rows[i].shelfY;
+        return pH(ir, next - top);
+      })
+    : ROWS.map(() => 0);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -302,8 +308,12 @@ export default function GeneratePage() {
             {ROWS.map(({ key, shelfHeading, headingTopFrac }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { outfits, beauty, essentials }[key];
-              const secTop = pY(ir, lm.sectionTop);
-              const secH   = pH(ir, lm.shelfY - lm.sectionTop);
+              const topFrac  = headingTopFrac ?? lm.sectionTop;
+              const nextFrac = rowIdx + 1 < ROWS.length
+                ? (ROWS[rowIdx + 1].headingTopFrac ?? LM.rows[rowIdx + 1].sectionTop)
+                : lm.shelfY;
+              const secTop = pY(ir, topFrac);
+              const secH   = pH(ir, nextFrac - topFrac);
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
