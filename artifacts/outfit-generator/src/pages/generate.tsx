@@ -29,15 +29,15 @@ const NAV_H = 90;
 const PINK  = "#e8649a";
 
 const LM = {
-  doorL: 0.14,   // left usable boundary (clear of window glow, calibrated for iPad+phone)
-  doorR: 0.88,   // right usable boundary (clear of right-side plant at shelf 1 level)
+  doorL: 0.10,   // left usable boundary (shelves span near full width, clear of window/bucket)
+  doorR: 0.90,   // right usable boundary (clear of right-side cabinet)
   rows: [
-    { sectionTop: 0.13, shelfY: 0.267, btnCY: 0.20 },  // OUTFITS    (shelf 1 surface at 26.7%)
-    { sectionTop: 0.33, shelfY: 0.433, btnCY: 0.38 },  // BEAUTY     (shelf 2 surface at 43.3%)
-    { sectionTop: 0.47, shelfY: 0.602, btnCY: 0.54 },  // TOILETRIES (shelf 3 surface at 60.2%)
-    { sectionTop: 0.65, shelfY: 0.760, btnCY: 0.70 },  // ESSENTIALS (below all shelves)
+    { sectionTop: 0.13, shelfY: 0.280, btnCY: 0.20 },  // OUTFITS    (shelf 1 surface at 28.0%)
+    { sectionTop: 0.30, shelfY: 0.500, btnCY: 0.40 },  // BEAUTY     (shelf 2 surface at 50.0%)
+    { sectionTop: 0.52, shelfY: 0.713, btnCY: 0.61 },  // TOILETRIES (shelf 3 surface at 71.3%)
+    { sectionTop: 0.73, shelfY: 0.870, btnCY: 0.80 },  // ESSENTIALS (below all shelves)
   ],
-  barY:   0.820,
+  barY:   0.840,
   barBot: 1.000,
 } as const;
 
