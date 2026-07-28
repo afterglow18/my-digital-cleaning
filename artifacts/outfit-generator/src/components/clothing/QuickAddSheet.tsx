@@ -544,6 +544,24 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   : "Save"}
               </button>
 
+              {/* Save original while bg removal is still running */}
+              {bgProcessing && (
+                <button
+                  onClick={() =>
+                    handleSave(
+                      originalBlob, null, "original",
+                      originalUrl, null, queueIndex,
+                    )
+                  }
+                  className="w-full py-3 border-4 border-black rounded-2xl font-display font-bold
+                    text-sm uppercase tracking-tight bg-white
+                    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+                    active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                >
+                  Save Original
+                </button>
+              )}
+
               {/* Back / retake link */}
               <button
                 onClick={() => {
