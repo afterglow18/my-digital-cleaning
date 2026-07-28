@@ -222,14 +222,12 @@ export default function GeneratePage() {
 
   // ── Section layout helpers — per-row, same as wardrobe.tsx ──────────────
   // 0.03 gap keeps photos from overlapping the next heading text
-  const SECTION_BOTTOM_GAP = 0.03;
+  const SECTION_BOTTOM_GAP = 0.015;
   const sectionHeights = ready
     ? ROWS.map(({ headingTopFrac }, i) => {
-        const top  = headingTopFrac ?? LM.rows[i].sectionTop;
-        const next = i + 1 < ROWS.length
-          ? (ROWS[i + 1].headingTopFrac ?? LM.rows[i + 1].sectionTop)
-          : LM.rows[i].shelfY;
-        return pH(ir, next - top - SECTION_BOTTOM_GAP);
+        const top    = LM.rows[i].sectionTop;
+        const bottom = (headingTopFrac ?? LM.rows[i].shelfY) - SECTION_BOTTOM_GAP;
+        return pH(ir, bottom - top);
       })
     : ROWS.map(() => 0);
 
@@ -310,12 +308,10 @@ export default function GeneratePage() {
             {ROWS.map(({ key, shelfHeading, headingTopFrac }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { outfits, beauty, essentials }[key];
-              const topFrac  = headingTopFrac ?? lm.sectionTop;
-              const nextFrac = rowIdx + 1 < ROWS.length
-                ? (ROWS[rowIdx + 1].headingTopFrac ?? LM.rows[rowIdx + 1].sectionTop)
-                : lm.shelfY;
-              const secTop = pY(ir, topFrac);
-              const secH   = pH(ir, nextFrac - topFrac - SECTION_BOTTOM_GAP);
+              const secTopFrac    = lm.sectionTop;
+              const secBottomFrac = (headingTopFrac ?? lm.shelfY) - SECTION_BOTTOM_GAP;
+              const secTop = pY(ir, secTopFrac);
+              const secH   = pH(ir, secBottomFrac - secTopFrac);
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
