@@ -220,10 +220,16 @@ export default function GeneratePage() {
 
   const canSave = Object.keys(centred).length > 0;
 
+  const HEADING_GAP = 0.024;
+
   // ── Section layout helpers — per-row, same as wardrobe.tsx ──────────────
   const sectionHeights = ready
-    ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
-    : LM.rows.map(() => 0);
+    ? ROWS.map(({ headingTopFrac }, i) => {
+        const lm = LM.rows[i];
+        const carouselTop = (headingTopFrac ?? lm.sectionTop + 0.01) + HEADING_GAP;
+        return pH(ir, lm.shelfY - carouselTop);
+      })
+    : ROWS.map(() => 0);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -302,8 +308,9 @@ export default function GeneratePage() {
             {ROWS.map(({ key, shelfHeading, headingTopFrac }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { outfits, beauty, essentials }[key];
-              const secTop = pY(ir, lm.sectionTop);
-              const secH   = pH(ir, lm.shelfY - lm.sectionTop);
+              const carouselTopFrac = (headingTopFrac ?? lm.sectionTop + 0.01) + HEADING_GAP;
+              const secTop = pY(ir, carouselTopFrac);
+              const secH   = pH(ir, lm.shelfY - carouselTopFrac);
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
