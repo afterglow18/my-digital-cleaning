@@ -48,8 +48,8 @@ type RowKey   = "outfits" | "beauty" | "essentials";
 type Category = "outfits" | "beauty" | "essentials";
 
 const ROWS: { key: RowKey; btnLabel: string; showLabel: boolean; shelfHeading: string | null; headingTopFrac?: number }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies", headingTopFrac: 0.266 },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools",    headingTopFrac: 0.426 },
+  { key: "outfits",    btnLabel: "+ ADD OUTFITS",    showLabel: false, shelfHeading: "Supplies", headingTopFrac: 0.256 },
+  { key: "beauty",     btnLabel: "+ ADD BEAUTY",     showLabel: false, shelfHeading: "Tools",    headingTopFrac: 0.416 },
   { key: "essentials", btnLabel: "+ ADD ESSENTIALS", showLabel: false, shelfHeading: "Areas",    headingTopFrac: 0.592 },
 ];
 

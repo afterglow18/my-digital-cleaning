@@ -73,8 +73,8 @@ type RowKey = "outfits" | "beauty" | "essentials";
 type Phase  = "idle" | "spinning" | "result";
 
 const ROWS: { key: RowKey; shelfHeading: string; headingTopFrac?: number }[] = [
-  { key: "outfits",    shelfHeading: "Supplies", headingTopFrac: 0.266 },
-  { key: "beauty",     shelfHeading: "Tools",    headingTopFrac: 0.426 },
+  { key: "outfits",    shelfHeading: "Supplies", headingTopFrac: 0.256 },
+  { key: "beauty",     shelfHeading: "Tools",    headingTopFrac: 0.416 },
   { key: "essentials", shelfHeading: "Areas",    headingTopFrac: 0.592 },
 ];
 
