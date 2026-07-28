@@ -432,9 +432,9 @@ export default function WardrobePage() {
 
           {/* ── Spray bottle (left) → saved cleans ── */}
           <button
-            onClick={() => navigate("/saved")}
-            aria-label="Saved cleans"
-            data-testid="btn-spray-saved"
+            onClick={() => navigate("/favorites")}
+            aria-label="Favorites"
+            data-testid="btn-spray-favorites"
             style={{
               position: "absolute",
               top:    pY(ir, 0.868),
@@ -452,9 +452,9 @@ export default function WardrobePage() {
 
           {/* ── Broom (right) → matchmaker ── */}
           <button
-            onClick={() => navigate("/generate")}
-            aria-label="Matchmaker"
-            data-testid="btn-broom-generate"
+            onClick={() => { setUpgradeReason("items"); }}
+            aria-label="Upgrade plan"
+            data-testid="btn-broom-upgrade"
             style={{
               position: "absolute",
               top:    pY(ir, 0.868),
