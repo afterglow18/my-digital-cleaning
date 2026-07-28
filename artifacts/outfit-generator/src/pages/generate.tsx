@@ -225,7 +225,9 @@ export default function GeneratePage() {
   const SECTION_BOTTOM_GAP = 0.015;
   const sectionHeights = ready
     ? ROWS.map(({ headingTopFrac }, i) => {
-        const top    = LM.rows[i].sectionTop;
+        const top    = i > 0
+          ? (ROWS[i - 1].headingTopFrac ?? LM.rows[i - 1].sectionTop)
+          : LM.rows[0].sectionTop;
         const bottom = (headingTopFrac ?? LM.rows[i].shelfY) - SECTION_BOTTOM_GAP;
         return pH(ir, bottom - top);
       })
@@ -308,7 +310,9 @@ export default function GeneratePage() {
             {ROWS.map(({ key, shelfHeading, headingTopFrac }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { outfits, beauty, essentials }[key];
-              const secTopFrac    = lm.sectionTop;
+              const secTopFrac    = rowIdx > 0
+                ? (ROWS[rowIdx - 1].headingTopFrac ?? LM.rows[rowIdx - 1].sectionTop)
+                : LM.rows[0].sectionTop;
               const secBottomFrac = (headingTopFrac ?? lm.shelfY) - SECTION_BOTTOM_GAP;
               const secTop = pY(ir, secTopFrac);
               const secH   = pH(ir, secBottomFrac - secTopFrac);
