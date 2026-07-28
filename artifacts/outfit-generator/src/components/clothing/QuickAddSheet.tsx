@@ -80,10 +80,9 @@ function blobToRawDataUrl(blob: Blob): Promise<string> {
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const PHOTO_TIPS = [
-  "Photograph individual products or bundle multiple items together.",
-  "Lay everything flat on a plain background.",
-  "Take the photo from directly above.",
-  "Keep all items fully in frame.",
+  { emoji: "🧴", text: "One cleaner, tool, or room per photo." },
+  { emoji: "💡", text: "Use bright, even lighting." },
+  { emoji: "📷", text: "Capture the entire item or room." },
 ] as const;
 
 const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
@@ -415,6 +414,21 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 </button>
               </div>
 
+              {/* Photo tips */}
+              <div className="border-2 border-black rounded-2xl bg-white p-4
+                              shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
+                  <span>📸</span> Photo Tips
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {PHOTO_TIPS.map((tip) => (
+                    <li key={tip.text} className="flex items-start gap-2 text-sm text-black/70 leading-snug">
+                      <span className="flex-shrink-0">{tip.emoji}</span>
+                      {tip.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </motion.div>
           )}
 
