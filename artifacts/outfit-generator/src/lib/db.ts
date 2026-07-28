@@ -34,6 +34,7 @@ export interface StoredClothingItem {
   purchasePrice?: string | null;
   purchaseDate?:  string | null;
   notes?:         string | null;
+  hasBeenCleaned?: boolean | null;
   createdAt:      string;
   updatedAt:      string;
 }

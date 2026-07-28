@@ -292,7 +292,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   // "Clean Up Photo" state
   const [bgProcessing,   setBgProcessing]   = useState(false);
   const [bgError,        setBgError]        = useState<string | null>(null);
-  const [hasBeenCleaned, setHasBeenCleaned] = useState(false);
+  const [hasBeenCleaned, setHasBeenCleaned] = useState(() => !!item?.hasBeenCleaned);
   /** Set to true when the user taps "Keep Original" mid-processing — the WASM
    *  result is discarded when it eventually arrives. */
   const cancelledRef = useRef(false);
@@ -379,7 +379,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
     // 2. DB write fires in the background — UI doesn't wait
     updateItem.mutate(
-      { id: item.id, data: { imageObjectPath: chosen } },
+      { id: item.id, data: { imageObjectPath: chosen, hasBeenCleaned: true } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
