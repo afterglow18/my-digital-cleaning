@@ -161,9 +161,9 @@ export default function SavedPage() {
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
       <header className="mb-6">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">My Cleanings</h1>
+        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
         <div className="flex items-center justify-between">
-          <p className="font-medium text-muted-foreground text-sm">Your saved cleans.</p>
+          <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
 
           {isFree && outfitCount > 0 && (
             <button
