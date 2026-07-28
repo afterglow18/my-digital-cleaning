@@ -214,13 +214,15 @@ export default function WardrobePage() {
   // ── Section layout helpers ────────────────────────────────────────────────
   // Each carousel spans from its own heading to the NEXT heading (or shelfY for
   // the last row) so photos are bounded header-to-header.
+  // 0.03 gap keeps photos from overlapping the next heading text
+  const SECTION_BOTTOM_GAP = 0.03;
   const sectionHeights = ready
     ? ROWS.map(({ headingTopFrac }, i) => {
         const top  = headingTopFrac ?? LM.rows[i].sectionTop;
         const next = i + 1 < ROWS.length
           ? (ROWS[i + 1].headingTopFrac ?? LM.rows[i + 1].sectionTop)
           : LM.rows[i].shelfY;
-        return pH(ir, next - top);
+        return pH(ir, next - top - SECTION_BOTTOM_GAP);
       })
     : ROWS.map(() => 0);
 
@@ -320,7 +322,7 @@ export default function WardrobePage() {
               ? (ROWS[rowIdx + 1].headingTopFrac ?? LM.rows[rowIdx + 1].sectionTop)
               : lm.shelfY;
             const secTop  = pY(ir, topFrac);
-            const secH    = pH(ir, nextFrac - topFrac);
+            const secH    = pH(ir, nextFrac - topFrac - SECTION_BOTTOM_GAP);
             const carLeft = pX(ir, LM.doorL);
             const carW    = pW(ir, LM.doorR - LM.doorL);
 
