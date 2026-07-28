@@ -1,0 +1,50 @@
+	Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/0c/43/ee/0c43ee5b-084c-e80b-4ecc-57052139cef9/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}
+	Height: 152
+	Width: 152
+Min os version: 15.0
+Processing state: VALID
+Version: 6
+Uses non exempt encryption: False
+Uploaded date: 2026-07-27 17:42:25-07:00
+Expiration date: 2026-10-25 17:42:25-07:00
+Audience type: APP_STORE_ELIGIBLE
+Computed min macOSversion: 12.0
+Computed min visionOSversion: 1.0
+
+Wait until build 42247439-9fea-4d61-aa32-b8687d372dbe and its beta details are processed
+Processing build 42247439-9fea-4d61-aa32-b8687d372dbe is completed
+Processing build 42247439-9fea-4d61-aa32-b8687d372dbe beta detail 42247439-9fea-4d61-aa32-b8687d372dbe is completed
+
+Processed build and beta details are
+-- Build --
+Id: 42247439-9fea-4d61-aa32-b8687d372dbe
+Type: builds
+Expired: False
+Icon asset token: 
+	Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/0c/43/ee/0c43ee5b-084c-e80b-4ecc-57052139cef9/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}
+	Height: 152
+	Width: 152
+Min os version: 15.0
+Processing state: VALID
+Version: 6
+Uses non exempt encryption: False
+Uploaded date: 2026-07-27 17:42:25-07:00
+Expiration date: 2026-10-25 17:42:25-07:00
+Audience type: APP_STORE_ELIGIBLE
+Computed min macOSversion: 12.0
+Computed min visionOSversion: 1.0
+-- Build Beta Detail --
+Id: 42247439-9fea-4d61-aa32-b8687d372dbe
+Type: buildBetaDetails
+Auto notify enabled: True
+External build state: READY_FOR_BETA_SUBMISSION
+Internal build state: IN_BETA_TESTING
+
+Submit build '42247439-9fea-4d61-aa32-b8687d372dbe' to TestFlight beta review
+Creating new Beta App Review Submission: build: 42247439-9fea-4d61-aa32-b8687d372dbe
+POST https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions returned 422: Another build is in review. - Another build in the same train is already in beta review. Please submit it again once it gets completed.
+Failed to publish /Users/builder/clone/build/ipa/App.ipa
+
+
+Build failed :|
+Step 13 script `Upload to TestFlight` exited with status code 1
