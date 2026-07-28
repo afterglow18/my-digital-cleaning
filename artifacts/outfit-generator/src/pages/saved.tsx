@@ -18,14 +18,13 @@ import { FREE_OUTFIT_LIMIT } from "@/lib/entitlements";
 import { WardrobePickerSheet } from "@/components/clothing/WardrobePickerSheet";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 
-const SLOT_ORDER = ["outfits", "beauty", "toiletries", "essentials"] as const;
+const SLOT_ORDER = ["outfits", "beauty", "essentials"] as const;
 type SlotKey = (typeof SLOT_ORDER)[number];
 
 const SLOT_LABELS: Record<SlotKey, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  outfits:    "Supplies",
+  beauty:     "Tools",
+  essentials: "Areas",
 };
 
 function ItemPhoto({
