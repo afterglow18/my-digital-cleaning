@@ -24,10 +24,10 @@ import { encodeToPng, processClothingImage } from "@/lib/processImage";
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
+  outfits:    "Supplies",
+  beauty:     "Tools",
   toiletries: "Toiletries",
-  essentials: "Essentials",
+  essentials: "Areas",
 };
 
 type Phase =
@@ -415,24 +415,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 </button>
               </div>
 
-              {/* Photo tips */}
-              <div className="border-2 border-black rounded-2xl bg-white p-4
-                              shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
-                  <span>📸</span> PHOTO TIPS
-                </p>
-                <ul className="flex flex-col gap-2">
-                  {PHOTO_TIPS.map((tip) => (
-                    <li key={tip} className="flex items-start gap-2 text-sm text-black/70 leading-snug">
-                      <span className="mt-0.5 w-4 h-4 border-2 border-black rounded-sm bg-primary
-                                       flex items-center justify-center flex-shrink-0">
-                        <Check className="w-2.5 h-2.5" strokeWidth={3} />
-                      </span>
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </motion.div>
           )}
 
