@@ -89,7 +89,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </main>
 
         {/* ── Bottom navigation — phone only ─────────────────────────────── */}
-        <nav className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t-[3px] border-black p-3 pb-safe z-[40]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-[3px] border-black p-3 pb-safe z-[40]">
           <ul className="flex items-center justify-around">
             {navItems.map((item) => {
               const isActive = location === item.href;
