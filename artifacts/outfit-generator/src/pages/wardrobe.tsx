@@ -335,18 +335,25 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Shelf heading (Supplies / Tools / Areas) ── */}
+                {/* ── Shelf heading (tappable → opens add sheet) ── */}
                 {shelfHeading && (
-                  <div style={{
-                    position: "absolute",
-                    top:       pY(ir, headingTopFrac ?? lm.sectionTop + 0.01),
-                    left:      carLeft,
-                    width:     carW,
-                    transform: "translateY(-50%)",
-                    zIndex:    24,
-                    textAlign: "center",
-                    pointerEvents: "none",
-                  }}>
+                  <button
+                    onClick={addHandlers[key]}
+                    aria-label={`Add to ${shelfHeading}`}
+                    style={{
+                      position: "absolute",
+                      top:       pY(ir, headingTopFrac ?? lm.sectionTop + 0.01),
+                      left:      carLeft,
+                      width:     carW,
+                      transform: "translateY(-50%)",
+                      zIndex:    24,
+                      textAlign: "center",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
                     <span style={{
                       fontFamily: "var(--font-display)",
                       fontWeight: 800,
@@ -356,9 +363,9 @@ export default function WardrobePage() {
                       color: "#fff",
                       textShadow: "0 1px 4px rgba(0,0,0,0.18)",
                     }}>
-                      {shelfHeading}
+                      + Add {shelfHeading}
                     </span>
-                  </div>
+                  </button>
                 )}
 
                 {/* ── Category label (tappable → add photo) ── */}
