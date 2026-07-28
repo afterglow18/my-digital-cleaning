@@ -80,11 +80,11 @@
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 9%;
   
-  --primary: 35 55% 82%; /* Warm Tan */
-  --primary-foreground: 28 50% 18%; /* Dark Brown */
+  --primary: 340 70% 90%; /* Light Pink */
+  --primary-foreground: 340 55% 35%; /* Deep Pink */
   
-  --secondary: 28 42% 55%; /* Medium Leather Brown */
-  --secondary-foreground: 40 30% 97%; /* Cream */
+  --secondary: 340 55% 75%; /* Medium Pink */
+  --secondary-foreground: 0 0% 100%; /* White */
   
   --muted: 0 0% 90%;
   --muted-foreground: 0 0% 40%;
@@ -125,11 +125,11 @@
   --popover-foreground: 45 33% 98%;
   --popover-border: 45 33% 98%;
   
-  --primary: 35 55% 82%;
-  --primary-foreground: 28 50% 18%;
+  --primary: 340 70% 90%;
+  --primary-foreground: 340 55% 35%;
   
-  --secondary: 28 42% 55%;
-  --secondary-foreground: 40 30% 97%;
+  --secondary: 340 55% 75%;
+  --secondary-foreground: 0 0% 100%;
   
   --muted: 0 0% 20%;
   --muted-foreground: 0 0% 70%;
