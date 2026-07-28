@@ -1,0 +1,50 @@
+Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/9e/e1/06/9ee1066a-899d-65de-ca79-d28d815c1257/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}
+	Height: 152
+	Width: 152
+Min os version: 15.0
+Processing state: VALID
+Version: 5
+Uses non exempt encryption: False
+Uploaded date: 2026-07-27 16:51:32-07:00
+Expiration date: 2026-10-25 16:51:32-07:00
+Audience type: APP_STORE_ELIGIBLE
+Computed min macOSversion: 12.0
+Computed min visionOSversion: 1.0
+
+Wait until build 19a900d0-dbdd-4478-ac5a-6e3af09d0faa and its beta details are processed
+Processing build 19a900d0-dbdd-4478-ac5a-6e3af09d0faa is completed
+Processing build 19a900d0-dbdd-4478-ac5a-6e3af09d0faa beta detail 19a900d0-dbdd-4478-ac5a-6e3af09d0faa is completed
+
+Processed build and beta details are
+-- Build --
+Id: 19a900d0-dbdd-4478-ac5a-6e3af09d0faa
+Type: builds
+Expired: False
+Icon asset token: 
+	Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/9e/e1/06/9ee1066a-899d-65de-ca79-d28d815c1257/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}
+	Height: 152
+	Width: 152
+Min os version: 15.0
+Processing state: VALID
+Version: 5
+Uses non exempt encryption: False
+Uploaded date: 2026-07-27 16:51:32-07:00
+Expiration date: 2026-10-25 16:51:32-07:00
+Audience type: APP_STORE_ELIGIBLE
+Computed min macOSversion: 12.0
+Computed min visionOSversion: 1.0
+-- Build Beta Detail --
+Id: 19a900d0-dbdd-4478-ac5a-6e3af09d0faa
+Type: buildBetaDetails
+Auto notify enabled: True
+External build state: READY_FOR_BETA_SUBMISSION
+Internal build state: IN_BETA_TESTING
+
+Submit build '19a900d0-dbdd-4478-ac5a-6e3af09d0faa' to TestFlight beta review
+Creating new Beta App Review Submission: build: 19a900d0-dbdd-4478-ac5a-6e3af09d0faa
+POST https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions returned 422: Beta App Description is missing. - Beta App Description is required to submit a build for external testing.
+Failed to publish /Users/builder/clone/build/ipa/App.ipa
+
+
+Build failed :|
+Step 13 script `Upload to TestFlight` exited with status code 1
