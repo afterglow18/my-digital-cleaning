@@ -30,9 +30,10 @@ import {
   useListClothing, getListClothingQueryKey,
   useListOutfits, getListOutfitsQueryKey,
   useSaveOutfit,
+  useDeleteClothingItem,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { QuickAddSheet } from "@/components/clothing/QuickAddSheet";
@@ -123,13 +124,19 @@ export default function WardrobePage() {
   const [isSaveOpen,    setIsSaveOpen]    = useState(false);
   const [saveName,      setSaveName]      = useState("");
   const [saveSuccess,   setSaveSuccess]   = useState(false);
+  const [showOrphans,   setShowOrphans]   = useState(false);
 
-  const saveOutfit = useSaveOutfit();
+  const saveOutfit   = useSaveOutfit();
+  const deleteItem   = useDeleteClothingItem();
 
   const { data: outfitsItems  = [] } = useListClothing({ category: "outfits"    }, { query: { queryKey: getListClothingQueryKey({ category: "outfits"    }) } });
   const { data: beautyItems   = [] } = useListClothing({ category: "beauty"     }, { query: { queryKey: getListClothingQueryKey({ category: "beauty"     }) } });
   const { data: essentialsItems = [] } = useListClothing({ category: "essentials" }, { query: { queryKey: getListClothingQueryKey({ category: "essentials" }) } });
+  const { data: allItems        = [] } = useListClothing({},                         { query: { queryKey: getListClothingQueryKey({})                         } });
   const { data: savedOutfitsList = [] } = useListOutfits();
+
+  const KNOWN_CATEGORIES = ["outfits", "beauty", "essentials"] as const;
+  const orphanItems = allItems.filter(i => !KNOWN_CATEGORIES.includes(i.category as typeof KNOWN_CATEGORIES[number]));
 
   const rowData: Record<RowKey, ClothingItem[]> = { outfits: outfitsItems, beauty: beautyItems, essentials: essentialsItems };
   const totalItems = outfitsItems.length + beautyItems.length + essentialsItems.length;
@@ -265,6 +272,26 @@ export default function WardrobePage() {
               My Digital Cleaning
             </div>
           </div>
+
+          {/* ── Orphaned items badge ── */}
+          {orphanItems.length > 0 && (
+            <button
+              onClick={() => setShowOrphans(true)}
+              style={{
+                position: "absolute",
+                top: pY(ir, 0.036), left: pX(ir, 0.06),
+                zIndex: 25,
+                padding: "3px 10px", borderRadius: 20, border: "none",
+                background: "rgba(255,255,255,0.65)",
+                boxShadow: "0 0 0 1.5px rgba(180,100,110,0.35)",
+                color: "#c2185b", fontWeight: 700, fontSize: 9,
+                letterSpacing: "0.07em", textTransform: "uppercase",
+                whiteSpace: "nowrap", cursor: "pointer",
+              }}
+            >
+              🗑 {orphanItems.length} extra
+            </button>
+          )}
 
           {/* ── Item-count badge (free tier) ── */}
           {itemsLeft !== null && (
@@ -548,6 +575,77 @@ export default function WardrobePage() {
                     </button>
                   </div>
                 </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Orphaned items modal ── */}
+      <AnimatePresence>
+        {showOrphans && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{
+              position: "absolute", inset: 0, zIndex: 70,
+              background: "rgba(0,0,0,0.45)",
+              display: "flex", alignItems: "flex-end", justifyContent: "center",
+            }}
+            onClick={() => setShowOrphans(false)}
+          >
+            <motion.div
+              initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: "#fff", borderRadius: "20px 20px 0 0",
+                padding: "20px 20px 36px",
+                width: "100%", maxWidth: 420,
+                maxHeight: "60vh", overflowY: "auto",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <span style={{ fontWeight: 800, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  Extra Items ({orphanItems.length})
+                </span>
+                <button onClick={() => setShowOrphans(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: "#888", marginBottom: 14 }}>
+                These items aren't on any shelf. You can delete them here.
+              </p>
+              {orphanItems.map(item => (
+                <div key={item.id} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 0", borderBottom: "1px solid #f0e0e8",
+                }}>
+                  {item.imageObjectPath
+                    ? <img src={item.imageObjectPath} alt={item.name}
+                        style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                    : <div style={{ width: 44, height: 44, borderRadius: 8, background: "#fce8ef", flexShrink: 0 }} />
+                  }
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {item.name || "Unnamed"}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#aaa" }}>{item.category}</div>
+                  </div>
+                  <button
+                    onClick={() => deleteItem.mutate({ id: item.id }, {
+                      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() }),
+                    })}
+                    disabled={deleteItem.isPending}
+                    style={{
+                      background: "none", border: "1.5px solid #e0a0b0", borderRadius: 8,
+                      padding: "6px 8px", cursor: "pointer", color: "#c2185b", flexShrink: 0,
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {orphanItems.length === 0 && (
+                <p style={{ textAlign: "center", color: "#aaa", fontSize: 13, padding: "20px 0" }}>All clear! ✨</p>
               )}
             </motion.div>
           </motion.div>
