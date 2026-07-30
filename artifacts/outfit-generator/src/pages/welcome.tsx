@@ -158,19 +158,8 @@ export default function WelcomePage({ onEnter }: Props) {
         src="/cleaning-hero.png"
         alt="My Digital Cleaning"
         draggable={false}
-        animate={{
-          opacity:
-            phase === "hero"
-              ? 1
-              : phase === "idle"
-              ? 0
-              : 1, // popping / exiting: reveal again
-        }}
-        transition={{
-          duration: phase === "hero" ? 0 : phase === "idle" ? 0.5 : 0.55,
-          delay:    phase === "popping" ? 0.15 : 0,
-          ease: "easeInOut",
-        }}
+        animate={{ opacity: phase === "hero" ? 1 : 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
         style={{
           position: "absolute",
           inset: 0,
