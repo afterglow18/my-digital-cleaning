@@ -11,6 +11,7 @@
  *      the DB mutation fires in the background.
  */
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2, Check,
@@ -488,7 +489,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const dirty         = isDirty(form, item);
   const displayImage  = liveImagePath ?? item.imageObjectPath;
 
-  return (
+  return createPortal(
     <>
       <motion.div
         initial={{ opacity: 0, y: "100%" }}
@@ -732,6 +733,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           />
         )}
       </AnimatePresence>
-    </>
+    </>,
+    document.body,
   );
 }
