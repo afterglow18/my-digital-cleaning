@@ -437,7 +437,7 @@ export default function SavedPage() {
                 {/* Footer: item count + use tracking */}
                 <div className="px-3 pb-3 flex flex-col gap-2">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wide">
-                    {outfit.items?.length ?? 0} product{(outfit.items?.length ?? 0) !== 1 ? "s" : ""}
+                    {outfit.items?.length ?? 0} item{(outfit.items?.length ?? 0) !== 1 ? "s" : ""}
                   </span>
 
                   {(() => {
