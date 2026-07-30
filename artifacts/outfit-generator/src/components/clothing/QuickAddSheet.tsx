@@ -9,6 +9,7 @@
  * the user sees "Photo X of Y" in the header.
  */
 import React, { useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Check } from "lucide-react";
 import {
@@ -331,7 +332,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const label       = CATEGORY_LABELS[category];
   const isMulti     = queueTotal > 1;
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: "100%" }}
       animate={{ opacity: 1, y: 0 }}
@@ -632,6 +633,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="hidden"
         onChange={handleInputChange}
       />
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
