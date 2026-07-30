@@ -481,7 +481,7 @@ export default function WardrobePage() {
           {/* ── SAVE button ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
-            aria-label="Save current case"
+            aria-label="Save current cleaning"
             style={{
               position: "absolute",
               top:    pY(ir, 0.868) - pW(ir, 0.074),
@@ -533,7 +533,7 @@ export default function WardrobePage() {
               ) : (
                 <>
                   <p style={{ fontWeight: 800, fontSize: 15, fontFamily: "var(--font-display)", marginBottom: 12 }}>
-                    Name this case
+                    Name this cleaning
                   </p>
                   <input
                     autoFocus
