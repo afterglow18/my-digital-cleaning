@@ -153,6 +153,26 @@ export default function WelcomePage({ onEnter }: Props) {
         style={{ position: "absolute", inset: 0, background: "#fce8ef" }}
       />
 
+      {/* ── Wardrobe bg — fades in as bubbles pop, mimics app reveal ──── */}
+      <motion.img
+        src="/cleaning-shelves-bg.png"
+        alt=""
+        draggable={false}
+        animate={{ opacity: phase === "popping" || phase === "exiting" ? 1 : 0 }}
+        transition={{ duration: 0.55, delay: phase === "popping" ? 0.15 : 0, ease: "easeInOut" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "top center",
+          userSelect: "none",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      />
+
       {/* ── Hero image ─────────────────────────────────────────────────── */}
       {/* Visible in Phase 1 (hero), fades out for Phase 2 (idle),
           fades back in as bubbles pop (popping/exiting)               */}
