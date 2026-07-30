@@ -30,8 +30,6 @@ import { processClothingImage, cancelBackgroundRemoval } from "@/lib/processImag
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const SEASON_OPTIONS    = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
-const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
 const CATEGORY_OPTIONS: { value: string; label: string }[] = [
   { value: "outfits",    label: "Supplies" },
   { value: "beauty",     label: "Tools"    },
@@ -614,23 +612,23 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             label="Item Name"
             value={form.name}
             onChange={patch("name") as (v: string) => void}
-            placeholder="e.g. White Linen Shirt"
+            placeholder="e.g. All-Purpose Cleaner"
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
-            <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
+            <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Method, Mrs. Meyer's…" />
+            <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Blue, Clear…" />
           </div>
 
-          <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
+          <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 500ml, Full Size…" />
 
           <div className="grid grid-cols-2 gap-3">
-            <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
-            <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
+            <SelectField label="Room / Location" value={form.season}   onChange={patch("season") as (v: string) => void}   options={LOCATION_OPTIONS} />
+            <SelectField label="Frequency"        value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={FREQUENCY_OPTIONS} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
+            <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$9.99" />
             <Field label="Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
           </div>
 
@@ -639,7 +637,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             <textarea
               value={form.notes}
               onChange={(e) => patch("notes")(e.target.value)}
-              placeholder="Anything worth remembering…"
+              placeholder="Dilution ratio, scent, restock reminder…"
               rows={3}
               className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
                          bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
