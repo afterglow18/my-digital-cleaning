@@ -449,7 +449,7 @@ export default function SavedPage() {
                         {/* Last used label — hidden if never used or used today */}
                         {outfit.lastUsedDate && !loggedToday && (
                           <span className="text-[10px] text-black/40 font-medium shrink-0">
-                            Last used: {formatLastUsed(outfit.lastUsedDate)}
+                            Last cleaned: {formatLastUsed(outfit.lastUsedDate)}
                           </span>
                         )}
                         <button
