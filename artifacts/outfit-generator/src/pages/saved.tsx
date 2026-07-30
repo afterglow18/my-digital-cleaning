@@ -465,7 +465,7 @@ export default function SavedPage() {
                               : "border-black bg-primary text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
                             }`}
                         >
-                          {loggedToday ? "Logged ✓  ·  Undo" : "🧹 Cleaning This Today"}
+                          {loggedToday ? "Logged ✓  ·  Undo" : "🧹 Cleaned Today"}
                         </button>
                       </div>
                     );
