@@ -6,6 +6,7 @@
  * falls through to QuickAddSheet so the user can upload a brand-new piece.
  */
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus } from "lucide-react";
 import {
@@ -70,7 +71,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <>
       <motion.div
         initial={{ opacity: 0, y: "100%" }}
@@ -221,6 +222,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
           />
         )}
       </AnimatePresence>
-    </>
+    </>,
+    document.body,
   );
 }

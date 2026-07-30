@@ -10,6 +10,7 @@
  *   $rc_lifetime  → Lifetime $9.99 (one-time)
  */
 import React, { useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { X, Check, Loader2 } from "lucide-react";
 import { useSubscription } from "@/lib/revenuecat";
@@ -176,7 +177,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
     }
   }, [isDisabled, offerings, qc, selected, purchase, onClose]);
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: "100%" }}
       animate={{ opacity: 1, y: 0 }}
@@ -337,6 +338,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
           </a>
         </div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
