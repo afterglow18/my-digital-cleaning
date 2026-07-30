@@ -1,9 +1,10 @@
 /**
- * WelcomePage — Bubble pop reveal animation.
+ * WelcomePage — Three-phase splash sequence.
  *
- * IDLE    : floating bubbles over pink bg; hero image hidden beneath.
- * POPPING : bubbles pop staggered; hero fades in underneath.
- * EXITING : whole screen fades out → onEnter().
+ * HERO     : Full-screen hero image with branding text. Auto-advances after 2.5 s.
+ * IDLE     : Floating bubbles over pink bg, same branding + CTA button.
+ * POPPING  : Bubbles pop, hero fades back in beneath.
+ * EXITING  : Whole screen fades out → onEnter().
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -11,27 +12,29 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface Props { onEnter: () => void; }
 
+type Phase = "hero" | "idle" | "popping" | "exiting";
+
 interface BubbleData {
   id: number;
-  x: number;         // % from left
-  y: number;         // % from top
-  size: number;      // px diameter
+  x: number;
+  y: number;
+  size: number;
   floatDelay: number;
   floatDuration: number;
-  popDelay: number;  // seconds after popping starts
+  popDelay: number;
 }
 
-// Golden-angle spiral — fixed at module level so they never re-randomise
+// Golden-angle spiral — fixed so they never re-randomise
 const BUBBLES: BubbleData[] = Array.from({ length: 58 }, (_, i) => {
-  const angle   = (i * 137.508 * Math.PI) / 180;
-  const radius  = Math.sqrt(i / 58) * 0.92;
-  const cx      = 50 + radius * 52 * Math.cos(angle);
-  const cy      = 46 + radius * 54 * Math.sin(angle);
+  const angle  = (i * 137.508 * Math.PI) / 180;
+  const radius = Math.sqrt(i / 58) * 0.92;
+  const cx     = 50 + radius * 52 * Math.cos(angle);
+  const cy     = 46 + radius * 54 * Math.sin(angle);
   return {
     id: i,
     x: Math.max(3, Math.min(97, cx)),
     y: Math.max(3, Math.min(90, cy)),
-    size: 16 + (i % 6) * 14,          // 16 → 86 px in steps of 14
+    size: 16 + (i % 6) * 14,
     floatDelay:    (i * 0.19) % 3.0,
     floatDuration: 2.4 + (i % 5) * 0.4,
     popDelay:      ((i * 0.023) + (i % 9) * 0.07) % 1.05,
@@ -41,21 +44,21 @@ const BUBBLES: BubbleData[] = Array.from({ length: 58 }, (_, i) => {
 const POP_COMPLETE_MS =
   Math.max(...BUBBLES.map(b => b.popDelay)) * 1000 + 380;
 
-// ── Single bubble ──────────────────────────────────────────────────────────
+// ── Single bubble ────────────────────────────────────────────────────────────
 function Bubble({
   data,
-  phase,
+  bubblePhase,
 }: {
   data: BubbleData;
-  phase: "idle" | "popping" | "exiting";
+  bubblePhase: "idle" | "popping" | "exiting";
 }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    if (phase !== "popping") return;
+    if (bubblePhase !== "popping") return;
     const t = setTimeout(() => setVisible(false), data.popDelay * 1000);
     return () => clearTimeout(t);
-  }, [phase, data.popDelay]);
+  }, [bubblePhase, data.popDelay]);
 
   return (
     <AnimatePresence>
@@ -64,7 +67,7 @@ function Bubble({
           key={data.id}
           initial={{ scale: 1, opacity: 1 }}
           animate={
-            phase === "idle"
+            bubblePhase === "idle"
               ? {
                   y: [0, -10, 3, -7, 0],
                   x: [0, 4, -2, 5, 0],
@@ -105,10 +108,16 @@ function Bubble({
   );
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function WelcomePage({ onEnter }: Props) {
-  const [phase, setPhase] = useState<"idle" | "popping" | "exiting">("idle");
+  const [phase, setPhase] = useState<Phase>("hero");
   const calledRef = useRef(false);
+
+  // Phase 1 → Phase 2: auto-advance after 2.5 s
+  useEffect(() => {
+    const t = setTimeout(() => setPhase("idle"), 2500);
+    return () => clearTimeout(t);
+  }, []);
 
   const finish = useCallback(() => {
     if (calledRef.current) return;
@@ -119,11 +128,12 @@ export default function WelcomePage({ onEnter }: Props) {
   const handleStart = () => {
     if (phase !== "idle") return;
     setPhase("popping");
-    // Start fade-out shortly after last bubble pops
     setTimeout(() => setPhase("exiting"), POP_COMPLETE_MS + 350);
-    // Call onEnter at the end of the fade
     setTimeout(finish, POP_COMPLETE_MS + 1050);
   };
+
+  const bubblePhase: "idle" | "popping" | "exiting" =
+    phase === "hero" ? "idle" : phase;
 
   return (
     <motion.div
@@ -131,19 +141,36 @@ export default function WelcomePage({ onEnter }: Props) {
       transition={{ duration: 0.75, ease: "easeIn" }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        background: "#fce8ef",
         overflow: "hidden",
-        paddingTop: "env(safe-area-inset-top, 44px)",
       }}
     >
-      {/* Hero image — hidden behind bubbles, fades in as they pop */}
+      {/* ── Pink background (Phase 2+) ─────────────────────────────────── */}
+      <motion.div
+        animate={{ opacity: phase !== "hero" ? 1 : 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        style={{ position: "absolute", inset: 0, background: "#fce8ef" }}
+      />
+
+      {/* ── Hero image ─────────────────────────────────────────────────── */}
+      {/* Visible in Phase 1 (hero), fades out for Phase 2 (idle),
+          fades back in as bubbles pop (popping/exiting)               */}
       <motion.img
         src="/cleaning-hero.png"
         alt="My Digital Cleaning"
         draggable={false}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: phase !== "idle" ? 1 : 0 }}
-        transition={{ duration: 0.55, delay: phase === "popping" ? 0.15 : 0 }}
+        animate={{
+          opacity:
+            phase === "hero"
+              ? 1
+              : phase === "idle"
+              ? 0
+              : 1, // popping / exiting: reveal again
+        }}
+        transition={{
+          duration: phase === "hero" ? 0 : phase === "idle" ? 0.5 : 0.55,
+          delay:    phase === "popping" ? 0.15 : 0,
+          ease: "easeInOut",
+        }}
         style={{
           position: "absolute",
           inset: 0,
@@ -153,16 +180,84 @@ export default function WelcomePage({ onEnter }: Props) {
           objectPosition: "top center",
           userSelect: "none",
           pointerEvents: "none",
+          zIndex: 1,
         }}
       />
 
-      {/* Bubbles */}
-      {BUBBLES.map(b => (
-        <Bubble key={b.id} data={b} phase={phase} />
-      ))}
+      {/* ── Dark gradient — helps text readability over hero (Phase 1) ── */}
+      <motion.div
+        animate={{ opacity: phase === "hero" ? 1 : 0 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          position: "absolute",
+          bottom: 0, left: 0, right: 0,
+          height: "55%",
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      />
 
-      {/* Bottom bar */}
-      <div
+      {/* ── Bubbles (Phase 2+) ─────────────────────────────────────────── */}
+      {phase !== "hero" &&
+        BUBBLES.map(b => (
+          <Bubble key={b.id} data={b} bubblePhase={bubblePhase} />
+        ))}
+
+      {/* ══ BOTTOM BAR ════════════════════════════════════════════════════ */}
+
+      {/* Phase 1 branding — white text over hero, no background */}
+      <motion.div
+        animate={{ opacity: phase === "hero" ? 1 : 0 }}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        style={{
+          position: "absolute",
+          bottom: 0, left: 0, right: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
+          padding: "24px 32px",
+          paddingBottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
+          zIndex: 20,
+          pointerEvents: "none",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.30em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.70)",
+            fontFamily: "var(--font-display, sans-serif)",
+          }}
+        >
+          Welcome to
+        </p>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 26,
+            fontWeight: 800,
+            letterSpacing: "0.01em",
+            color: "#ffffff",
+            fontFamily: "var(--font-display, sans-serif)",
+            textShadow: "0 2px 12px rgba(0,0,0,0.30)",
+            textAlign: "center",
+            lineHeight: 1.15,
+          }}
+        >
+          My Digital Cleaning
+        </p>
+      </motion.div>
+
+      {/* Phase 2 bottom bar — frosted pink, same branding + button + links */}
+      <motion.div
+        animate={{ opacity: phase === "idle" ? 1 : 0 }}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
         style={{
           position: "absolute",
           bottom: 0, left: 0, right: 0,
@@ -175,36 +270,52 @@ export default function WelcomePage({ onEnter }: Props) {
           background: "rgba(252,232,239,0.88)",
           backdropFilter: "blur(6px)",
           zIndex: 20,
+          pointerEvents: phase === "idle" ? "auto" : "none",
         }}
       >
-        <AnimatePresence>
-          {phase === "idle" && (
-            <motion.p
-              key="subtitle"
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.2 } }}
-              style={{
-                margin: 0,
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.25em",
-                textTransform: "uppercase",
-                color: "rgba(176, 80, 120, 0.65)",
-              }}
-            >
-              your cleaning collection
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {/* Branding */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+            marginBottom: 4,
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.30em",
+              textTransform: "uppercase",
+              color: "rgba(176, 80, 120, 0.60)",
+              fontFamily: "var(--font-display, sans-serif)",
+            }}
+          >
+            Welcome to
+          </p>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 800,
+              letterSpacing: "0.01em",
+              color: "rgba(140, 40, 85, 0.90)",
+              fontFamily: "var(--font-display, sans-serif)",
+              textAlign: "center",
+              lineHeight: 1.2,
+            }}
+          >
+            My Digital Cleaning
+          </p>
+        </div>
 
+        {/* CTA button */}
         <motion.button
           onClick={handleStart}
           whileTap={{ scale: 0.96 }}
-          animate={{
-            opacity: phase === "idle" ? 1 : 0,
-            scale:   phase === "idle" ? 1 : 0.85,
-          }}
-          transition={{ duration: 0.22 }}
           style={{
             fontFamily: "var(--font-display, sans-serif)",
             fontWeight: 800,
@@ -219,51 +330,54 @@ export default function WelcomePage({ onEnter }: Props) {
             boxShadow:
               "0 4px 18px rgba(192,68,122,0.45), 0 1px 0 rgba(255,255,255,0.18) inset",
             whiteSpace: "nowrap",
-            pointerEvents: phase === "idle" ? "auto" : "none",
           }}
         >
           Start Cleaning 🧹
         </motion.button>
-      </div>
+      </motion.div>
 
-      {/* Footer links */}
+      {/* Footer links (Phase 2 only) */}
       <motion.div
         animate={{ opacity: phase === "idle" ? 1 : 0 }}
         transition={{ duration: 0.2 }}
         style={{
           position: "absolute",
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 112px)",
           left: 0, right: 0,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           gap: 4,
           zIndex: 10,
-          pointerEvents: "none",
+          pointerEvents: phase === "idle" ? "auto" : "none",
         }}
       >
         <a
           href="https://classy-alpaca-441.notion.site/Privacy-Policy-39682db6065380b19dedcb108d4a0ef4"
-          target="_blank" rel="noopener noreferrer"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
             fontSize: 11, fontWeight: 500,
             color: "rgba(160,80,110,0.45)",
             textDecoration: "none",
             letterSpacing: "0.02em",
-            pointerEvents: "auto",
           }}
-        >Privacy Policy</a>
+        >
+          Privacy Policy
+        </a>
         <a
           href="https://app.notion.com/p/My-Digital-Closet-Support-39782db60653802a9088dcbae84c0527?source=copy_link"
-          target="_blank" rel="noopener noreferrer"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
             fontSize: 11, fontWeight: 500,
             color: "rgba(160,80,110,0.45)",
             textDecoration: "none",
             letterSpacing: "0.02em",
-            pointerEvents: "auto",
           }}
-        >Support</a>
+        >
+          Support
+        </a>
       </motion.div>
     </motion.div>
   );
