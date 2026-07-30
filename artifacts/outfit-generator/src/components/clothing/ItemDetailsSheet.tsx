@@ -112,7 +112,7 @@ function TimesUsedField({ value, onCommit }: { value: number; onCommit: (n: numb
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Used</span>
+      <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Cleaned</span>
       {editing ? (
         <input
           ref={inputRef}
