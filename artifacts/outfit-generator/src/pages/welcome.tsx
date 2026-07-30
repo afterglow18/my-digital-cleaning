@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface Props { onEnter: () => void; }
 
-type Phase = "hero" | "idle" | "popping";
+type Phase = "hero" | "idle" | "popping" | "exiting";
 
 interface BubbleData {
   id: number;
@@ -128,24 +128,28 @@ export default function WelcomePage({ onEnter }: Props) {
   const handleStart = () => {
     if (phase !== "idle") return;
     setPhase("popping");
-    // Once bubbles have all popped, remove the splash overlay
-    setTimeout(finish, POP_COMPLETE_MS + 400);
+    // Start fade-out of overlay shortly after last bubble pops
+    setTimeout(() => setPhase("exiting"), POP_COMPLETE_MS + 350);
+    // Remove overlay at end of fade
+    setTimeout(finish, POP_COMPLETE_MS + 1050);
   };
 
-  const bubblePhase: "idle" | "popping" =
-    phase === "hero" || phase === "idle" ? "idle" : "popping";
+  const bubblePhase: "idle" | "popping" | "exiting" =
+    phase === "hero" ? "idle" : phase === "idle" ? "idle" : phase === "popping" ? "popping" : "exiting";
 
   return (
-    <div
+    <motion.div
+      animate={{ opacity: phase === "exiting" ? 0 : 1 }}
+      transition={{ duration: 0.75, ease: "easeIn" }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
         overflow: "hidden",
       }}
     >
-      {/* ── Pink background — fades out during popping to reveal app ──── */}
+      {/* ── Pink background ──────────────────────────────────────────── */}
       <motion.div
-        animate={{ opacity: phase === "popping" ? 0 : phase === "hero" ? 0 : 1 }}
-        transition={{ duration: 0.6, ease: "easeInOut" }}
+        animate={{ opacity: phase === "hero" ? 0 : 1 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
         style={{ position: "absolute", inset: 0, background: "#fce8ef" }}
       />
 
@@ -366,6 +370,6 @@ export default function WelcomePage({ onEnter }: Props) {
           Support
         </a>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
