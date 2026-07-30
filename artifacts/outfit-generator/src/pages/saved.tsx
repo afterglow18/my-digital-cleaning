@@ -461,7 +461,7 @@ export default function SavedPage() {
                           className={`flex-1 py-2 rounded-lg border-2 font-bold text-xs uppercase tracking-wide
                             transition-all active:scale-95
                             ${loggedToday
-                              ? "border-green-600/40 bg-green-50 text-green-700"
+                              ? "border-pink-400/40 bg-pink-50 text-pink-600"
                               : "border-black bg-primary text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
                             }`}
                         >
