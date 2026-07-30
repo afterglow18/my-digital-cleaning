@@ -198,7 +198,8 @@ export async function updateOutfit(
 /** Marks an outfit as used today and increments timesWorn on every item in the group. */
 export async function logOutfitUsed(outfitId: number, itemIds: number[]): Promise<void> {
   const db    = await getDB();
-  const today = new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+  const d = new Date();
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const existing = await db.get("saved_outfits", outfitId) as StoredOutfit | undefined;
   if (existing) await db.put("saved_outfits", { ...existing, lastUsedDate: today, id: outfitId });
 

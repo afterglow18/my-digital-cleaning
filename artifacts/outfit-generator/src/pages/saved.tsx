@@ -89,7 +89,10 @@ export default function SavedPage() {
   // Stores the lastUsedDate value before logging so Undo can restore it
   const [undoPrev, setUndoPrev] = useState<Record<number, string | null>>({});
 
-  const todayStr = () => new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
 
   const formatLastUsed = (date: string) => {
     const [y, m, d] = date.split("-").map(Number);
