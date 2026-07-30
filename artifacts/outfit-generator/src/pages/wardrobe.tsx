@@ -484,7 +484,7 @@ export default function WardrobePage() {
             aria-label="Save current cleaning"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.868) - pW(ir, 0.074),
+              top:    pY(ir, 0.895) - pW(ir, 0.074),
               left:   pX(ir, 0.500)  - pW(ir, 0.074),
               width:  pW(ir, 0.148),
               height: pW(ir, 0.148),
