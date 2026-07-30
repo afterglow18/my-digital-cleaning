@@ -40,10 +40,11 @@ export interface StoredClothingItem {
 }
 
 export interface StoredOutfit {
-  id?:       number;
-  name:      string;
-  notes?:    string | null;
-  createdAt: string;
+  id?:            number;
+  name:           string;
+  notes?:         string | null;
+  lastUsedDate?:  string | null;  // "YYYY-MM-DD" local date, null if never logged
+  createdAt:      string;
 }
 
 export interface StoredOutfitItem {
@@ -64,11 +65,12 @@ export interface ClothingItem extends Required<StoredClothingItem> {
 }
 
 export interface SavedOutfit {
-  id:        number;
-  name:      string;
-  notes?:    string | null;
-  createdAt: string;
-  items:     ClothingItem[];
+  id:            number;
+  name:          string;
+  notes?:        string | null;
+  lastUsedDate?: string | null;  // "YYYY-MM-DD" local date, null if never logged
+  createdAt:     string;
+  items:         ClothingItem[];
 }
 
 // ── Singleton DB connection ───────────────────────────────────────────────────

@@ -5,7 +5,10 @@ import {
   useRenameOutfit,
   useAddItemToOutfit,
   useRemoveItemFromOutfit,
+  useLogOutfitUsed,
+  useUndoOutfitUsed,
   getListOutfitsQueryKey,
+  getListClothingQueryKey,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
 import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
@@ -80,6 +83,39 @@ export default function SavedPage() {
   const [editingNotesId, setEditingNotesId] = useState<number | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const notesInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const logOutfitUsed  = useLogOutfitUsed();
+  const undoOutfitUsed = useUndoOutfitUsed();
+  // Stores the lastUsedDate value before logging so Undo can restore it
+  const [undoPrev, setUndoPrev] = useState<Record<number, string | null>>({});
+
+  const todayStr = () => new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+
+  const formatLastUsed = (date: string) => {
+    const [y, m, d] = date.split("-").map(Number);
+    return `${m}/${d}/${String(y).slice(2)}`;
+  };
+
+  const handleLogToday = (outfitId: number, prevDate: string | null, itemIds: number[]) => {
+    setUndoPrev(prev => ({ ...prev, [outfitId]: prevDate }));
+    logOutfitUsed.mutate({ outfitId, itemIds }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+      },
+    });
+  };
+
+  const handleUndo = (outfitId: number, itemIds: number[]) => {
+    const prev = undoPrev[outfitId] ?? null;
+    undoOutfitUsed.mutate({ outfitId, prevDate: prev, itemIds }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+        setUndoPrev(p => { const n = { ...p }; delete n[outfitId]; return n; });
+      },
+    });
+  };
 
   useEffect(() => {
     if (renamingId !== null) renameInputRef.current?.focus();
@@ -398,11 +434,42 @@ export default function SavedPage() {
                   </div>
                 </div>
 
-                {/* Footer: item count */}
-                <div className="px-3 pb-3">
+                {/* Footer: item count + use tracking */}
+                <div className="px-3 pb-3 flex flex-col gap-2">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wide">
                     {outfit.items?.length ?? 0} product{(outfit.items?.length ?? 0) !== 1 ? "s" : ""}
                   </span>
+
+                  {(() => {
+                    const today      = todayStr();
+                    const loggedToday = outfit.lastUsedDate === today;
+                    const itemIds    = (outfit.items ?? []).map(i => i.id);
+                    return (
+                      <div className="flex items-center gap-2">
+                        {/* Last used label — hidden if never used or used today */}
+                        {outfit.lastUsedDate && !loggedToday && (
+                          <span className="text-[10px] text-black/40 font-medium shrink-0">
+                            Last used: {formatLastUsed(outfit.lastUsedDate)}
+                          </span>
+                        )}
+                        <button
+                          onClick={() =>
+                            loggedToday
+                              ? handleUndo(outfit.id, itemIds)
+                              : handleLogToday(outfit.id, outfit.lastUsedDate ?? null, itemIds)
+                          }
+                          className={`flex-1 py-2 rounded-lg border-2 font-bold text-xs uppercase tracking-wide
+                            transition-all active:scale-95
+                            ${loggedToday
+                              ? "border-green-600/40 bg-green-50 text-green-700"
+                              : "border-black bg-primary text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
+                            }`}
+                        >
+                          {loggedToday ? "Logged ✓  ·  Undo" : "🧹 Cleaning This Today"}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               </motion.div>
             );

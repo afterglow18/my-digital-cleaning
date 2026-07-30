@@ -151,11 +151,12 @@ async function hydrateOutfit(outfit: StoredOutfit & { id: number }): Promise<Sav
   );
 
   return {
-    id:        outfit.id,
-    name:      outfit.name,
-    notes:     outfit.notes ?? null,
-    createdAt: outfit.createdAt,
-    items:     items.filter(Boolean) as ClothingItem[],
+    id:           outfit.id,
+    name:         outfit.name,
+    notes:        outfit.notes ?? null,
+    lastUsedDate: outfit.lastUsedDate ?? null,
+    createdAt:    outfit.createdAt,
+    items:        items.filter(Boolean) as ClothingItem[],
   };
 }
 
@@ -183,12 +184,42 @@ export async function saveOutfit(data: { name: string; itemIds: number[] }): Pro
   return hydrateOutfit({ ...record, id: outfitId });
 }
 
-export async function updateOutfit(id: number, data: { name?: string; notes?: string | null }): Promise<void> {
+export async function updateOutfit(
+  id: number,
+  data: { name?: string; notes?: string | null; lastUsedDate?: string | null },
+): Promise<void> {
   const db       = await getDB();
   const existing = await db.get("saved_outfits", id) as StoredOutfit | undefined;
   if (!existing) throw new Error(`Outfit ${id} not found`);
 
   await db.put("saved_outfits", { ...existing, ...data, id });
+}
+
+/** Marks an outfit as used today and increments timesWorn on every item in the group. */
+export async function logOutfitUsed(outfitId: number, itemIds: number[]): Promise<void> {
+  const db    = await getDB();
+  const today = new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+  const existing = await db.get("saved_outfits", outfitId) as StoredOutfit | undefined;
+  if (existing) await db.put("saved_outfits", { ...existing, lastUsedDate: today, id: outfitId });
+
+  const now = new Date().toISOString();
+  for (const id of itemIds) {
+    const item = await db.get("clothing_items", id) as StoredClothingItem | undefined;
+    if (item) await db.put("clothing_items", { ...item, timesWorn: (item.timesWorn ?? 0) + 1, updatedAt: now });
+  }
+}
+
+/** Undoes a "log today" — restores the previous lastUsedDate and decrements timesWorn on each item (floor 0). */
+export async function undoOutfitUsed(outfitId: number, prevDate: string | null, itemIds: number[]): Promise<void> {
+  const db       = await getDB();
+  const existing = await db.get("saved_outfits", outfitId) as StoredOutfit | undefined;
+  if (existing) await db.put("saved_outfits", { ...existing, lastUsedDate: prevDate, id: outfitId });
+
+  const now = new Date().toISOString();
+  for (const id of itemIds) {
+    const item = await db.get("clothing_items", id) as StoredClothingItem | undefined;
+    if (item) await db.put("clothing_items", { ...item, timesWorn: Math.max(0, (item.timesWorn ?? 0) - 1), updatedAt: now });
+  }
 }
 
 export async function deleteOutfit(id: number): Promise<void> {

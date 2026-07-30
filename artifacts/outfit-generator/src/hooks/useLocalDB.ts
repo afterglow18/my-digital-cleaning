@@ -21,6 +21,8 @@ import {
   deleteOutfit,
   addItemToOutfit,
   removeItemFromOutfit,
+  logOutfitUsed,
+  undoOutfitUsed,
 } from "@/lib/localDB";
 
 export type { ClothingItem, SavedOutfit } from "@/lib/db";
@@ -151,8 +153,20 @@ export function useSaveOutfit() {
 }
 
 export function useRenameOutfit() {
-  return useMutation<void, Error, { id: number; data: { name?: string; notes?: string | null } }>({
+  return useMutation<void, Error, { id: number; data: { name?: string; notes?: string | null; lastUsedDate?: string | null } }>({
     mutationFn: ({ id, data }) => updateOutfit(id, data),
+  });
+}
+
+export function useLogOutfitUsed() {
+  return useMutation<void, Error, { outfitId: number; itemIds: number[] }>({
+    mutationFn: ({ outfitId, itemIds }) => logOutfitUsed(outfitId, itemIds),
+  });
+}
+
+export function useUndoOutfitUsed() {
+  return useMutation<void, Error, { outfitId: number; prevDate: string | null; itemIds: number[] }>({
+    mutationFn: ({ outfitId, prevDate, itemIds }) => undoOutfitUsed(outfitId, prevDate, itemIds),
   });
 }
 

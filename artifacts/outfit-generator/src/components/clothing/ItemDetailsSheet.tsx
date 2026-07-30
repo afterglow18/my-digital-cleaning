@@ -95,6 +95,47 @@ function SelectField({
   );
 }
 
+// ── Times Used editable field ─────────────────────────────────────────────────
+function TimesUsedField({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft,   setDraft]   = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const start = () => { setDraft(String(value)); setEditing(true); };
+  const commit = () => {
+    const n = parseInt(draft, 10);
+    if (!isNaN(n) && n >= 0 && n !== value) onCommit(n);
+    setEditing(false);
+  };
+
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Used</span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          type="number"
+          min={0}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }}
+          className="border-2 border-black rounded-lg px-3 py-2 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary w-full"
+        />
+      ) : (
+        <button
+          onClick={start}
+          className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50 text-left hover:border-black/40 transition-colors"
+        >
+          {value}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Compare Overlay ───────────────────────────────────────────────────────────
 
 interface CompareOverlayProps {
@@ -613,12 +654,16 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               onChange={patch("category") as (v: string) => void}
               options={CATEGORY_OPTIONS}
             />
-            <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Used</span>
-              <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
-                {item.timesWorn ?? 0}
-              </div>
-            </div>
+            <TimesUsedField
+              value={item.timesWorn ?? 0}
+              onCommit={(n) => updateItem.mutate(
+                { id: item.id, data: { timesWorn: n } },
+                { onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+                    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+                }}
+              )}
+            />
           </div>
 
         </div>
