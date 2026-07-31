@@ -140,7 +140,7 @@ export default function AccountPage() {
       await qc.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
       flash(
         "success",
-        `Restored ${result.clothingAdded} items and ${result.outfitsAdded} outfits.` +
+        `Restored ${result.clothingAdded} items and ${result.outfitsAdded} cleanings.` +
           (result.skippedItems > 0 ? ` (${result.skippedItems} skipped — already exist.)` : ""),
       );
     } catch (err) {
