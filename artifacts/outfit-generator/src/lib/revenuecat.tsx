@@ -34,6 +34,16 @@ function getApiKey(): string {
   throw new Error("RevenueCat API key not configured");
 }
 
+// ── Init gate — queries await this before calling any RC methods ──────────────
+// Resolves (never rejects) once configure() has finished or failed.
+// This prevents the RC Capacitor plugin from hanging when methods are called
+// before configure() has completed on a fresh native launch.
+
+let _rcInitResolve: (() => void) | null = null;
+const rcInitReady: Promise<void> = new Promise<void>((resolve) => {
+  _rcInitResolve = resolve;
+});
+
 // ── Lazy-import Purchases so it doesn't crash in the browser ─────────────────
 
 type PurchasesType = typeof import("@revenuecat/purchases-capacitor").Purchases;
@@ -54,18 +64,24 @@ async function getPurchases(): Promise<PurchasesType | null> {
 // ── Initialization ────────────────────────────────────────────────────────────
 
 export async function initializeRevenueCat(): Promise<void> {
-  const Purchases = await getPurchases();
-  if (!Purchases) return;
-
-  const apiKey = getApiKey();
-
   try {
-    const { LOG_LEVEL } = await import("@revenuecat/purchases-capacitor");
-    await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-  } catch { /* non-fatal */ }
+    const Purchases = await getPurchases();
+    if (!Purchases) return; // not native — gate resolves in finally
 
-  await Purchases.configure({ apiKey });
-  console.log("[RevenueCat] Configured");
+    const apiKey = getApiKey();
+
+    try {
+      const { LOG_LEVEL } = await import("@revenuecat/purchases-capacitor");
+      await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
+    } catch { /* non-fatal */ }
+
+    await Purchases.configure({ apiKey });
+    console.log("[RevenueCat] Configured");
+  } finally {
+    // Always unblock the queries, even if init failed.
+    // The individual RC calls will surface their own errors.
+    _rcInitResolve?.();
+  }
 }
 
 // ── Query key ─────────────────────────────────────────────────────────────────
@@ -84,6 +100,7 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
+      await rcInitReady;
       const { customerInfo } = await Purchases.getCustomerInfo();
       return customerInfo;
     },
@@ -96,6 +113,7 @@ function useSubscriptionContext() {
     queryFn: async () => {
       const Purchases = await getPurchases();
       if (!Purchases) return null;
+      await rcInitReady;
       const result = await Purchases.getOfferings();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (result as any).offerings ?? result ?? null;
