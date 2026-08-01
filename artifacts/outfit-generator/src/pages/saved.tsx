@@ -257,6 +257,11 @@ export default function SavedPage() {
       ) : outfits && outfits.length > 0 ? (
         <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
           {outfits.map((outfit) => {
+            // Format "YYYY-MM-DD" → "M/D/YY" without timezone shift
+            const fmtDate = (iso: string) => {
+              const [y, m, d] = iso.split("-");
+              return `${parseInt(m)}/${parseInt(d)}/${y.slice(2)}`;
+            };
             // Group items by category — first match per slot wins
             const bySlot = (outfit.items ?? []).reduce<Partial<Record<SlotKey, ClothingItem>>>(
               (acc, item) => {
@@ -308,13 +313,20 @@ export default function SavedPage() {
                       <Pencil className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-50 transition-opacity" />
                     </button>
                   )}
-                  <button
-                    onClick={() => handleDelete(outfit.id)}
-                    className="w-8 h-8 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:translate-x-0.5 active:shadow-none hover:bg-destructive/10 transition-colors shrink-0"
-                    data-testid={`button-delete-outfit-${outfit.id}`}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    {outfit.lastUsedDate && (
+                      <span className="text-[9px] font-bold text-black/40 uppercase tracking-wide leading-none">
+                        {fmtDate(outfit.lastUsedDate)}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleDelete(outfit.id)}
+                      className="w-8 h-8 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:translate-x-0.5 active:shadow-none hover:bg-destructive/10 transition-colors"
+                      data-testid={`button-delete-outfit-${outfit.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Notes */}
