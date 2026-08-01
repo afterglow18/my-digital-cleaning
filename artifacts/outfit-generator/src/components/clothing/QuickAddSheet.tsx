@@ -10,6 +10,7 @@
  */
 import React, { useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { BlobImg } from "@/components/BlobImg";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Check } from "lucide-react";
 import {
@@ -464,7 +465,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 >
                   <div className="w-full aspect-square bg-white overflow-hidden">
                     {originalUrl && (
-                      <img
+                      <BlobImg
                         src={originalUrl}
                         alt="Original"
                         className="w-full h-full object-cover"
@@ -501,7 +502,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                         <span className="text-[11px] text-black/40 font-medium">Processing…</span>
                       </div>
                     ) : cleanedUrl ? (
-                      <img
+                      <BlobImg
                         src={cleanedUrl}
                         alt="Cleaned"
                         className="w-full h-full object-contain"
