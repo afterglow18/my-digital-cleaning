@@ -61,6 +61,19 @@ async function getPurchases(): Promise<PurchasesType | null> {
   }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Rejects with "timed out" after `ms` milliseconds. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timed out")), ms);
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 // ── Initialization ────────────────────────────────────────────────────────────
 
 export async function initializeRevenueCat(): Promise<void> {
@@ -75,11 +88,20 @@ export async function initializeRevenueCat(): Promise<void> {
       await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
     } catch { /* non-fatal */ }
 
-    await Purchases.configure({ apiKey });
-    console.log("[RevenueCat] Configured");
+    // RC Capacitor v13 configure() performs a network call to fetch CustomerInfo,
+    // so it can block indefinitely if RC's servers are slow. We cap it at 5 s:
+    // a timeout here just means CustomerInfo wasn't prefetched — the SDK is still
+    // ready and the queries will fetch it themselves.
+    try {
+      await withTimeout(Purchases.configure({ apiKey }), 5000);
+      console.log("[RevenueCat] Configured");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!msg.includes("timed out")) throw e;
+      console.warn("[RevenueCat] configure() timed out (slow network) — SDK still ready");
+    }
   } finally {
-    // Always unblock the queries, even if init failed.
-    // The individual RC calls will surface their own errors.
+    // Always unblock the queries, even if init failed or timed out.
     _rcInitResolve?.();
   }
 }

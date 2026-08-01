@@ -55,6 +55,17 @@ workflows:
         script: |
           cd artifacts/outfit-generator
           rm -rf ios
+
+          # Bust pnpm symlinks so Xcode can compile the RC Swift code.
+          # Without this, @revenuecat/purchases-capacitor is a symlink that
+          # Xcode cannot follow, configure() hangs forever, and nothing works.
+          RC_PATH="node_modules/@revenuecat/purchases-capacitor"
+          if [ -L "$RC_PATH" ]; then
+            cp -rL "$RC_PATH" "${RC_PATH}-real"
+            rm "$RC_PATH"
+            mv "${RC_PATH}-real" "$RC_PATH"
+          fi
+
           npx cap add ios
           npx cap sync ios
 
