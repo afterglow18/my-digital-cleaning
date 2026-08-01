@@ -193,6 +193,8 @@ interface CompareOverlayProps {
 
 function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: CompareOverlayProps) {
   const [selected, setSelected] = useState<"original" | "cleaned">("cleaned");
+  const origSrc    = useBlobUrl(originalUrl);
+  const cleanedSrc = useBlobUrl(cleanedUrl);
 
   return (
     <motion.div
@@ -239,7 +241,7 @@ function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: Compa
           >
             <div className="w-full aspect-square bg-white overflow-hidden relative">
               <img
-                src={getImageUrl(originalUrl)!}
+                src={origSrc ?? undefined}
                 alt="Original"
                 className="w-full h-full object-cover"
               />
@@ -274,7 +276,7 @@ function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: Compa
               }}
             >
               <img
-                src={getImageUrl(cleanedUrl)!}
+                src={cleanedSrc ?? undefined}
                 alt="Cleaned"
                 className="w-full h-full object-contain"
               />
