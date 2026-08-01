@@ -36,9 +36,9 @@ import { CSS } from "@dnd-kit/utilities";
 
 const CATEGORY_LABELS: Record<string, string> = {
   outfits:    "Supplies",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  beauty:     "Tools",
+  toiletries: "Products",
+  essentials: "Areas",
 };
 
 const ORDER_KEY = "closet-favorites-order";

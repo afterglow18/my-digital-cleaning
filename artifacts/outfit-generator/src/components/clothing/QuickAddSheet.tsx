@@ -27,7 +27,7 @@ type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 const CATEGORY_LABELS: Record<Category, string> = {
   outfits:    "Supplies",
   beauty:     "Tools",
-  toiletries: "Toiletries",
+  toiletries: "Products",
   essentials: "Areas",
 };
 
