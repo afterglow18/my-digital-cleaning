@@ -87,10 +87,10 @@ const PHOTO_TIPS = [
 ] as const;
 
 const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
-  outfits:    { emoji: "👗", items: ["Tops", "Bottoms", "Shoes", "Swim", "Undergarments", "Dresses", "Accessories"] },
-  beauty:     { emoji: "💄", items: ["Makeup", "Skincare", "Hair", "Jewelry", "Nail Polish"] },
-  toiletries: { emoji: "🪥", items: ["Shower", "Dental", "Medicine", "Feminine Care", "First Aid"] },
-  essentials: { emoji: "🧳", items: ["Travel Docs", "Tech", "Snacks", "Books", "Accessories"] },
+  outfits:    { emoji: "🧴", items: ["Sprays", "Wipes", "Detergent", "Bleach", "Disinfectant", "Polish", "Fabric Softener"] },
+  beauty:     { emoji: "🧹", items: ["Mop", "Broom", "Brush", "Sponge", "Vacuum", "Scrubber", "Microfiber Cloth"] },
+  toiletries: { emoji: "🪣", items: ["Dish Soap", "Laundry Pods", "Air Freshener", "Drain Cleaner", "Toilet Cleaner", "Glass Cleaner"] },
+  essentials: { emoji: "🏠", items: ["Kitchen", "Bathroom", "Bedroom", "Living Room", "Garage", "Laundry Room", "Office"] },
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
