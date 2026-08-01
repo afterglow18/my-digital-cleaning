@@ -10,7 +10,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, RefreshCw, Loader2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { exportBackup, importBackup, pickBackupFile } from "@/lib/backup";
-import { useSubscription } from "@/lib/revenuecat";
+import { useSubscription, REVENUECAT_ENTITLEMENT_IDENTIFIER } from "@/lib/revenuecat";
 import { useQueryClient } from "@tanstack/react-query";
 import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
 import {
@@ -157,7 +157,7 @@ export default function AccountPage() {
         info &&
         typeof info === "object" &&
         "entitlements" in info &&
-        (info as any).entitlements?.active?.["premium"] !== undefined;
+        (info as any).entitlements?.active?.[REVENUECAT_ENTITLEMENT_IDENTIFIER] !== undefined;
       flash(
         "success",
         hasPremium
