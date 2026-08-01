@@ -18,8 +18,8 @@ interface Props {
 
 const PRO_FEATURES = [
   { emoji: "✅", text: "Everything in Unlock Forever" },
-  { emoji: "🧍", text: "360° Mannequin Look View" },
-  { emoji: "💄", text: "Dress a realistic mannequin with your saved looks" },
+  { emoji: "🧍", text: "360° Mannequin View" },
+  { emoji: "🧹", text: "Dress a mannequin with your saved cleaning items" },
   { emoji: "🔄", text: "Rotate 360° — front, side, and back" },
   { emoji: "🚀", text: "Future Pro features included" },
 ] as const;
