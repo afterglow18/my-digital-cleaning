@@ -200,7 +200,12 @@ export default function SavedPage() {
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
       <header className="mb-6">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
+        <div className="flex items-baseline justify-between mb-1">
+          <h1 className="text-4xl font-display font-bold uppercase tracking-tighter">Lookbook</h1>
+          <span className="text-sm font-bold text-black/40 tabular-nums">
+            {formatLastUsed(todayStr())}
+          </span>
+        </div>
         <div className="flex items-center justify-between">
           <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
 
