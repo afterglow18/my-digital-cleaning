@@ -462,7 +462,7 @@ export default function SavedPage() {
                     return (
                       <div className="flex items-center gap-2">
                         {/* Last used label — hidden if never used or used today */}
-                        {outfit.lastUsedDate && !loggedToday && (
+                        {outfit.lastUsedDate && (
                           <span className="text-[10px] text-black/40 font-medium shrink-0">
                             Last cleaned: {formatLastUsed(outfit.lastUsedDate)}
                           </span>
