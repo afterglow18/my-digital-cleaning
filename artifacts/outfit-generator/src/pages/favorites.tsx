@@ -14,7 +14,7 @@ import {
   type ClothingItem,
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 
 import {
@@ -97,8 +97,8 @@ function SortableTile({
         style={{ background: "#F5EDD8", display: "block", padding: 0, cursor: "grab" }}
       >
         {item.imageObjectPath ? (
-          <img
-            src={getImageUrl(item.imageObjectPath)!}
+          <BlobImg
+            src={item.imageObjectPath}
             alt={item.name}
             className="w-full h-full"
             style={{ objectFit: "cover", objectPosition: "center", pointerEvents: "none" }}

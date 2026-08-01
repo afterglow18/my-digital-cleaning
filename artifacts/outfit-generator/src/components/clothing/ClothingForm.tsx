@@ -5,7 +5,7 @@ import * as z from "zod";
 import { ClothingItemInputCategory } from "@/hooks/useLocalDB";
 import { useCallback, useState } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -77,7 +77,7 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
       <div className="relative">
         <div className="aspect-[4/3] w-full border-4 border-dashed border-black bg-muted flex items-center justify-center relative overflow-hidden group">
           {imagePath ? (
-            <img src={getImageUrl(imagePath)!} alt="Upload preview" className="w-full h-full object-cover" />
+            <BlobImg src={imagePath} alt="Upload preview" className="w-full h-full object-cover" />
           ) : (
             <div className="text-center flex flex-col items-center p-4">
               <div className="w-16 h-16 bg-white border-2 border-black rounded-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center mb-4">

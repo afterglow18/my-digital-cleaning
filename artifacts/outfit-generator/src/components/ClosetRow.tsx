@@ -35,7 +35,7 @@ const OPACITY_SIDE = 0.72;           // side cards fade to 72%
 const BG_CENTER   = "rgba(252, 215, 230, 0.92)";  // light pink card for selected item
 const SHADOW_CTR  = "0 4px 18px rgba(232,100,154,0.30), 0 1px 4px rgba(232,100,154,0.15)";
 import { type ClothingItem } from "@/hooks/useLocalDB";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface ClosetRowHandle {
@@ -341,8 +341,8 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
                   }}
                 >
                   {item.imageObjectPath ? (
-                    <img
-                      src={getImageUrl(item.imageObjectPath)!}
+                    <BlobImg
+                      src={item.imageObjectPath}
                       alt={item.name ?? ""}
                       draggable={false}
                       style={{

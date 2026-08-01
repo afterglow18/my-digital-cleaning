@@ -41,6 +41,7 @@ import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 import { UpgradeSheet, UpgradeReason } from "@/components/paywall/UpgradeSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { BlobImg } from "@/components/BlobImg";
 import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
 import { createClothingItem } from "@/lib/localDB";
 
@@ -620,7 +621,7 @@ export default function WardrobePage() {
                   padding: "10px 0", borderBottom: "1px solid #f0e0e8",
                 }}>
                   {item.imageObjectPath
-                    ? <img src={item.imageObjectPath} alt={item.name}
+                    ? <BlobImg src={item.imageObjectPath} alt={item.name}
                         style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
                     : <div style={{ width: 44, height: 44, borderRadius: 8, background: "#fce8ef", flexShrink: 0 }} />
                   }

@@ -1,6 +1,6 @@
 import React from "react";
 import { type ClothingItem } from "@/hooks/useLocalDB";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 
 interface ClothingCardProps {
   item: ClothingItem;
@@ -15,9 +15,9 @@ export function ClothingCard({ item, onClick }: ClothingCardProps) {
     >
       <div className="aspect-[3/4] bg-muted w-full relative">
         {item.imageObjectPath ? (
-          <img 
-            src={getImageUrl(item.imageObjectPath)!} 
-            alt={item.name} 
+          <BlobImg
+            src={item.imageObjectPath}
+            alt={item.name}
             className="w-full h-full object-cover"
           />
         ) : (

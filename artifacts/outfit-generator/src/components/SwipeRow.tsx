@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { Plus } from "lucide-react";
 import { type ClothingItem } from "@/hooks/useLocalDB";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 
 // ── Constants (fallback defaults) ─────────────────────────────────────────────
 export const ITEM_W   = 112;
@@ -327,8 +327,8 @@ export const SwipeRow = forwardRef<SwipeRowHandle, SwipeRowProps>(
                   }}
                 >
                   {item.imageObjectPath ? (
-                    <img
-                      src={getImageUrl(item.imageObjectPath)!}
+                    <BlobImg
+                      src={item.imageObjectPath}
                       alt={item.name}
                       style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                       draggable={false}
