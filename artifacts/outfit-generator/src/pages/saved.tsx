@@ -13,7 +13,7 @@ import {
 } from "@/hooks/useLocalDB";
 import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
@@ -47,8 +47,8 @@ function ItemPhoto({
       style={{ background: "#F5EDD8", padding: 0, display: "block" }}
     >
       {item.imageObjectPath ? (
-        <img
-          src={getImageUrl(item.imageObjectPath)!}
+        <BlobImg
+          src={item.imageObjectPath}
           alt={item.name}
           className="w-full h-full object-contain"
           style={{ objectFit: "contain", objectPosition: "center" }}
@@ -406,7 +406,7 @@ export default function SavedPage() {
                               style={{ background: "#F5EDD8" }}
                             >
                               {item.imageObjectPath ? (
-                                <img src={getImageUrl(item.imageObjectPath)!} alt={item.name} className="w-full h-full object-contain" />
+                                <BlobImg src={item.imageObjectPath} alt={item.name} className="w-full h-full object-contain" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <span className="text-[8px] font-bold text-black/30">—</span>

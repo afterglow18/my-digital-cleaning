@@ -15,7 +15,7 @@ import {
   type ListClothingCategory,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
-import { getImageUrl } from "@/lib/utils";
+import { BlobImg } from "@/components/BlobImg";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuickAddSheet } from "./QuickAddSheet";
 
@@ -115,8 +115,8 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                     <div className="relative w-full aspect-square border-2 border-black overflow-hidden"
                       style={{ background: "#F5EDD8" }}>
                       {item.imageObjectPath ? (
-                        <img
-                          src={getImageUrl(item.imageObjectPath)!}
+                        <BlobImg
+                          src={item.imageObjectPath}
                           alt={item.name}
                           className="w-full h-full object-contain transition-opacity group-active:opacity-70"
                         />

@@ -12,53 +12,7 @@
  */
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-
-/**
- * Converts a data URL to a blob: URL for display.
- * On iOS WKWebView, embedding large base64 strings directly in <img src>
- * can spike memory and kill the WebContent process (white screen).
- * A blob: URL keeps the bytes in memory as a Blob — much cheaper on the DOM.
- */
-function useBlobUrl(dataUrl: string | null | undefined): string | null {
-  const blobUrlRef = useRef<string | null>(null);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Revoke any previous blob URL to avoid leaks
-    if (blobUrlRef.current) {
-      URL.revokeObjectURL(blobUrlRef.current);
-      blobUrlRef.current = null;
-    }
-
-    if (!dataUrl) { setBlobUrl(null); return; }
-
-    // Non-data URLs (object-storage paths, https://) are fine as-is
-    if (!dataUrl.startsWith("data:")) { setBlobUrl(dataUrl); return; }
-
-    let cancelled = false;
-    fetch(dataUrl)
-      .then(r => r.blob())
-      .then(blob => {
-        if (cancelled) return;
-        const url = URL.createObjectURL(blob);
-        blobUrlRef.current = url;
-        setBlobUrl(url);
-      })
-      .catch(() => {
-        if (!cancelled) setBlobUrl(dataUrl); // fall back to data URL on error
-      });
-
-    return () => {
-      cancelled = true;
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-        blobUrlRef.current = null;
-      }
-    };
-  }, [dataUrl]);
-
-  return blobUrl;
-}
+import { BlobImg } from "@/components/BlobImg";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2, Check,
@@ -73,7 +27,6 @@ import {
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
-import { getImageUrl } from "@/lib/utils";
 import { processClothingImage, cancelBackgroundRemoval } from "@/lib/processImage";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -193,8 +146,6 @@ interface CompareOverlayProps {
 
 function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: CompareOverlayProps) {
   const [selected, setSelected] = useState<"original" | "cleaned">("cleaned");
-  const origSrc    = useBlobUrl(originalUrl);
-  const cleanedSrc = useBlobUrl(cleanedUrl);
 
   return (
     <motion.div
@@ -240,8 +191,8 @@ function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: Compa
                 : "border-black/20 opacity-60"}`}
           >
             <div className="w-full aspect-square bg-white overflow-hidden relative">
-              <img
-                src={origSrc ?? undefined}
+              <BlobImg
+                src={originalUrl}
                 alt="Original"
                 className="w-full h-full object-cover"
               />
@@ -275,8 +226,8 @@ function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: Compa
                 background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 16px 16px",
               }}
             >
-              <img
-                src={cleanedSrc ?? undefined}
+              <BlobImg
+                src={cleanedUrl}
                 alt="Cleaned"
                 className="w-full h-full object-contain"
               />
@@ -537,7 +488,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
   const dirty         = isDirty(form, item);
   const displayImage  = liveImagePath ?? item.imageObjectPath;
-  const imgSrc        = useBlobUrl(displayImage);
 
   return createPortal(
     <>
@@ -608,8 +558,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                 backgroundSize: "16px 16px",
               }}
             >
-              <img
-                src={imgSrc ?? undefined}
+              <BlobImg
+                src={displayImage}
                 alt={item.name}
                 className="w-full h-full object-contain"
               />
