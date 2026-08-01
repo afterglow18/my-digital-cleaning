@@ -37,6 +37,16 @@ const CATEGORY_OPTIONS: { value: string; label: string }[] = [
   { value: "essentials", label: "Areas"    },
 ];
 
+const LOCATION_OPTIONS: string[] = [
+  "", "Kitchen", "Bathroom", "Bedroom", "Living Room",
+  "Office", "Laundry", "Garage", "Outdoor", "All Rooms",
+];
+
+const FREQUENCY_OPTIONS: string[] = [
+  "", "Daily", "Weekly", "Bi-weekly", "Monthly",
+  "Quarterly", "Seasonally", "Annually", "As Needed",
+];
+
 function Field({
   label, value, onChange, placeholder, type = "text",
 }: {
