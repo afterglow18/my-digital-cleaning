@@ -206,10 +206,17 @@ export async function analyzeItem(id: number, imageUrl: string): Promise<void> {
 
 /**
  * Queue a single item for immediate analysis (e.g. after a photo is added or
- * updated). Fire-and-forget — does not contribute to the indexing toast.
+ * updated). Shows the "Preparing photo search…" toast while work is in progress.
  */
 export function queueItemForAnalysis(id: number, imageUrl: string): void {
-  setTimeout(() => analyzeItem(id, imageUrl), 0);
+  setIndexing(true);
+  setTimeout(async () => {
+    try {
+      await analyzeItem(id, imageUrl);
+    } finally {
+      setIndexing(false);
+    }
+  }, 0);
 }
 
 // ── Background indexer ────────────────────────────────────────────────────────

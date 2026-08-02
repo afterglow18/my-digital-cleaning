@@ -29,6 +29,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { processClothingImage, cancelBackgroundRemoval } from "@/lib/processImage";
 import { LookbookPickerSheet } from "@/components/LookbookPickerSheet";
+import { queueItemForAnalysis } from "@/lib/visionIndex";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -362,6 +363,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
    * Set optimistically so the photo updates instantly, before the DB write lands.
    */
   const [liveImagePath, setLiveImagePath] = useState<string | null>(null);
+  const [, setCleanedToday] = useState(false);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
@@ -438,6 +440,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
           queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
           queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+          queueItemForAnalysis(item.id, chosen);
         },
         onError: (err) => {
           // Silently log — liveImagePath is already updated so UX isn't disrupted

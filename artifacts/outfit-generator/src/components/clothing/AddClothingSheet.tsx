@@ -3,6 +3,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { ClothingForm, ClothingFormData } from "./ClothingForm";
 import { useCreateClothingItem, getListClothingQueryKey } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
+import { queueItemForAnalysis } from "@/lib/visionIndex";
 
 interface AddClothingSheetProps {
   open: boolean;
@@ -18,8 +19,11 @@ export function AddClothingSheet({ open, onOpenChange, defaultCategory }: AddClo
     createItem.mutate(
       { data: { ...data, imageObjectPath: data.imageObjectPath || undefined } },
       {
-        onSuccess: () => {
+        onSuccess: (createdItem) => {
           queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+          if (createdItem.imageObjectPath) {
+            queueItemForAnalysis(createdItem.id, createdItem.imageObjectPath);
+          }
           onOpenChange(false);
         }
       }

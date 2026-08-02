@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { encodeToPng, processClothingImage } from "@/lib/processImage";
+import { queueItemForAnalysis } from "@/lib/visionIndex";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,9 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
               queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
               if (onCreated) onCreated(createdItem);
+              if (createdItem.imageObjectPath) {
+                queueItemForAnalysis(createdItem.id, createdItem.imageObjectPath);
+              }
               resolve();
             },
             onError: reject,
