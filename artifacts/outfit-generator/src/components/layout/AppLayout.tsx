@@ -15,7 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const wardrobeCount = stats?.byCategory
     ? stats.byCategory
         .filter((c: { category: string }) =>
-          ["outfits", "beauty", "toiletries", "essentials"].includes(c.category)
+          ["outfits", "beauty", "essentials"].includes(c.category)
         )
         .reduce((sum: number, c: { count: number }) => sum + c.count, 0)
     : undefined;

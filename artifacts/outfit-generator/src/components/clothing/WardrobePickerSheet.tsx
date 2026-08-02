@@ -19,12 +19,11 @@ import { BlobImg } from "@/components/BlobImg";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuickAddSheet } from "./QuickAddSheet";
 
-type Category = "outfits" | "beauty" | "toiletries" | "essentials";
+type Category = "outfits" | "beauty" | "essentials";
 
 const CATEGORY_LABELS: Record<Category, string> = {
   outfits:    "Supplies",
   beauty:     "Tools",
-  toiletries: "Products",
   essentials: "Areas",
 };
 

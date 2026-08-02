@@ -23,12 +23,11 @@ import { encodeToPng, processClothingImage } from "@/lib/processImage";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type Category = "outfits" | "beauty" | "toiletries" | "essentials";
+type Category = "outfits" | "beauty" | "essentials";
 
 const CATEGORY_LABELS: Record<Category, string> = {
   outfits:    "Supplies",
   beauty:     "Tools",
-  toiletries: "Products",
   essentials: "Areas",
 };
 
@@ -90,7 +89,6 @@ const PHOTO_TIPS = [
 const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
   outfits:    { emoji: "🧴", items: ["Sprays", "Wipes", "Detergent", "Bleach", "Disinfectant", "Polish", "Fabric Softener"] },
   beauty:     { emoji: "🧹", items: ["Mop", "Broom", "Brush", "Sponge", "Vacuum", "Scrubber", "Microfiber Cloth"] },
-  toiletries: { emoji: "🪣", items: ["Dish Soap", "Laundry Pods", "Air Freshener", "Drain Cleaner", "Toilet Cleaner", "Glass Cleaner"] },
   essentials: { emoji: "🏠", items: ["Kitchen", "Bathroom", "Bedroom", "Living Room", "Garage", "Laundry Room", "Office"] },
 };
 

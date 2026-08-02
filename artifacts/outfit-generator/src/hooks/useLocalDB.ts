@@ -194,12 +194,11 @@ export function useRemoveItemFromOutfit() {
 export const ClothingItemInputCategory = {
   outfits:    "outfits",
   beauty:     "beauty",
-  toiletries: "toiletries",
   essentials: "essentials",
 } as const;
 
 // ── Type aliases kept for compatibility with old api-client-react consumers ───
-export type ClothingItemCategory       = "outfits" | "beauty" | "toiletries" | "essentials";
+export type ClothingItemCategory       = "outfits" | "beauty" | "essentials";
 export type ListClothingCategory        = ClothingItemCategory;
 export type ClothingItemUpdateCategory  = ClothingItemCategory;
 export type ClothingItemInputCategoryType = ClothingItemCategory;
