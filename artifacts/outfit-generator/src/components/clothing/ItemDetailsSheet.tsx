@@ -376,7 +376,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
     setCompareData(null);
     setLiveImagePath(null);
     setHasBeenCleaned(false);
-    setCleanedToday(false);
     cancelledRef.current = false;
   }, [item?.id]);
 
