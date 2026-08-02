@@ -10,12 +10,16 @@
  *   saved_outfits   — named outfit collections
  *   outfit_items    — junction: outfit ↔ clothing item
  *   settings        — key/value store for app preferences
+ *
+ * Schema v2 (migration):
+ *   clothing_items gains: visionLabels, visionText, visionVersion
+ *   (no structural change — fields default to undefined on old records)
  */
 
 import { openDB, type IDBPDatabase } from "idb";
 
 export const DB_NAME    = "my-digital-suitcase";
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 // ── Stored types (IndexedDB records) ─────────────────────────────────────────
 
@@ -35,6 +39,10 @@ export interface StoredClothingItem {
   purchaseDate?:  string | null;
   notes?:         string | null;
   hasBeenCleaned?: boolean | null;
+  // v2 — photo analysis fields (undefined on old records; use ?? [] / ?? 0)
+  visionLabels?:  string[] | null;
+  visionText?:    string[] | null;
+  visionVersion?: number | null;
   createdAt:      string;
   updatedAt:      string;
 }
@@ -81,39 +89,47 @@ export async function getDB(): Promise<IDBPDatabase> {
   if (_db) return _db;
 
   _db = await openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      // clothing_items
-      if (!db.objectStoreNames.contains("clothing_items")) {
-        const store = db.createObjectStore("clothing_items", {
-          keyPath:       "id",
-          autoIncrement: true,
-        });
-        store.createIndex("by_category", "category");
-        store.createIndex("by_favorite", "isFavorite");
+    upgrade(db, oldVersion) {
+      // ── v1 stores ──────────────────────────────────────────────────────────
+      if (oldVersion < 1) {
+        // clothing_items
+        if (!db.objectStoreNames.contains("clothing_items")) {
+          const store = db.createObjectStore("clothing_items", {
+            keyPath:       "id",
+            autoIncrement: true,
+          });
+          store.createIndex("by_category", "category");
+          store.createIndex("by_favorite", "isFavorite");
+        }
+
+        // saved_outfits
+        if (!db.objectStoreNames.contains("saved_outfits")) {
+          db.createObjectStore("saved_outfits", {
+            keyPath:       "id",
+            autoIncrement: true,
+          });
+        }
+
+        // outfit_items
+        if (!db.objectStoreNames.contains("outfit_items")) {
+          const store = db.createObjectStore("outfit_items", {
+            keyPath:       "id",
+            autoIncrement: true,
+          });
+          store.createIndex("by_outfit", "outfitId");
+          store.createIndex("by_item",   "clothingItemId");
+        }
+
+        // settings
+        if (!db.objectStoreNames.contains("settings")) {
+          db.createObjectStore("settings", { keyPath: "key" });
+        }
       }
 
-      // saved_outfits
-      if (!db.objectStoreNames.contains("saved_outfits")) {
-        db.createObjectStore("saved_outfits", {
-          keyPath:       "id",
-          autoIncrement: true,
-        });
-      }
-
-      // outfit_items
-      if (!db.objectStoreNames.contains("outfit_items")) {
-        const store = db.createObjectStore("outfit_items", {
-          keyPath:       "id",
-          autoIncrement: true,
-        });
-        store.createIndex("by_outfit", "outfitId");
-        store.createIndex("by_item",   "clothingItemId");
-      }
-
-      // settings
-      if (!db.objectStoreNames.contains("settings")) {
-        db.createObjectStore("settings", { keyPath: "key" });
-      }
+      // ── v2: visionLabels / visionText / visionVersion added to items ───────
+      // No new object stores or indexes needed — fields are optional on records.
+      // Existing records simply won't have them until the background indexer runs.
+      // (oldVersion < 2 intentionally left as a no-op structural migration)
     },
 
     blocked() {

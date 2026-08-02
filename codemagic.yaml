@@ -69,6 +69,16 @@ workflows:
           npx cap add ios
           npx cap sync ios
 
+      - name: Inject native Swift plugins
+        script: |
+          # Copy the VisionPlugin Swift files into the Xcode project.
+          # They must live inside ios/App/App/ so Xcode compiles them.
+          DEST="artifacts/outfit-generator/ios/App/App"
+          SRC="artifacts/outfit-generator/ios-native"
+          cp "$SRC/VisionPlugin.swift" "$DEST/VisionPlugin.swift"
+          cp "$SRC/VisionPlugin.m"     "$DEST/VisionPlugin.m"
+          echo "VisionPlugin copied to $DEST"
+
       - name: Inject app icon
         script: |
           ICONSET="artifacts/outfit-generator/ios/App/App/Assets.xcassets/AppIcon.appiconset"

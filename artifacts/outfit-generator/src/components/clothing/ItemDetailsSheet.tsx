@@ -16,6 +16,7 @@ import { BlobImg } from "@/components/BlobImg";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2, Check,
+  BookmarkPlus,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -28,6 +29,7 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { processClothingImage, cancelBackgroundRemoval } from "@/lib/processImage";
+import { LookbookPickerSheet } from "@/components/LookbookPickerSheet";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -292,9 +294,12 @@ function CompareOverlay({ originalUrl, cleanedUrl, onConfirm, onDismiss }: Compa
 // ── Main Component ────────────────────────────────────────────────────────────
 
 interface ItemDetailsSheetProps {
-  item:      ClothingItem | null;
-  onClose:   () => void;
-  onDeleted?: () => void;
+  item:               ClothingItem | null;
+  onClose:            () => void;
+  onDeleted?:         () => void;
+  /** When true: shows "Add to Lookbook" + "Cleaned Today" footer buttons.
+   *  When false/absent: shows the photo-area Clean Up Photo row + "Cleaned Today". */
+  showAddToLookbook?: boolean;
 }
 
 interface FormState {
@@ -335,9 +340,11 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
   );
 }
 
-export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
+export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook = false }: ItemDetailsSheetProps) {
   const [form,             setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLookbookPicker, setShowLookbookPicker] = useState(false);
+  const [cleanedToday,     setCleanedToday]     = useState(false);
 
   // "Clean Up Photo" state
   const [bgProcessing,   setBgProcessing]   = useState(false);
@@ -373,6 +380,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     setCompareData(null);
     setLiveImagePath(null);
     setHasBeenCleaned(false);
+    setCleanedToday(false);
     cancelledRef.current = false;
   }, [item?.id]);
 
@@ -491,6 +499,15 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     );
   };
 
+  const handleCleanedToday = () => {
+    if (!item || cleanedToday) return;
+    setCleanedToday(true);
+    updateItem.mutate(
+      { id: item.id, data: { timesWorn: (item.timesWorn ?? 0) + 1 } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() }) },
+    );
+  };
+
   const patch = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
 
@@ -592,8 +609,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               )}
             </div>
 
-            {/* "Clean Up Photo" action row */}
-            <div className="flex-shrink-0 border-b-2 border-black bg-white px-4 py-2.5 flex items-center gap-3">
+            {/* "Clean Up Photo" action row — hidden when showAddToLookbook (footer handles it) */}
+            {!showAddToLookbook && <div className="flex-shrink-0 border-b-2 border-black bg-white px-4 py-2.5 flex items-center gap-3">
               <button
                 onClick={handleCleanUpPhoto}
                 disabled={bgProcessing || hasBeenCleaned}
@@ -612,7 +629,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               {!bgError && liveImagePath && !bgProcessing && (
                 <span className="text-xs text-green-700 font-medium">Photo updated ✓</span>
               )}
-            </div>
+            </div>}
           </>
         )}
 
@@ -679,6 +696,44 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
         {/* ── Footer actions ── */}
         <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
+          {/* Context-aware 2-button row */}
+          <div className="flex gap-2">
+            {showAddToLookbook ? (
+              <button
+                onClick={() => setShowLookbookPicker(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-black
+                           bg-primary font-bold text-xs uppercase tracking-wide
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              >
+                <BookmarkPlus className="w-3.5 h-3.5" />
+                Add to Lookbook
+              </button>
+            ) : (
+              <button
+                onClick={handleCleanUpPhoto}
+                disabled={bgProcessing || hasBeenCleaned}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-black
+                  font-bold text-xs uppercase tracking-wide transition-all
+                  ${bgProcessing || hasBeenCleaned
+                    ? "bg-gray-100 text-black/30 cursor-not-allowed"
+                    : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {bgProcessing ? "Processing…" : hasBeenCleaned ? "Already Cleaned ✓" : "Clean Up Photo"}
+              </button>
+            )}
+            <button
+              onClick={handleCleanedToday}
+              disabled={cleanedToday}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs uppercase tracking-wide transition-all
+                ${cleanedToday
+                  ? "border-pink-300/40 bg-pink-50 text-pink-500 cursor-default"
+                  : "border-black bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
+            >
+              {cleanedToday ? "Cleaned ✓" : "🧹 Cleaned Today"}
+            </button>
+          </div>
 
           <AnimatePresence>
             {dirty && (
@@ -740,6 +795,16 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             cleanedUrl={compareData.cleanedUrl}
             onConfirm={handleCompareConfirm}
             onDismiss={() => setCompareData(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Add to Lookbook picker ── */}
+      <AnimatePresence>
+        {showLookbookPicker && item && (
+          <LookbookPickerSheet
+            item={item}
+            onClose={() => setShowLookbookPicker(false)}
           />
         )}
       </AnimatePresence>

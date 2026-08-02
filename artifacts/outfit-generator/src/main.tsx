@@ -2,11 +2,16 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { initializeRevenueCat } from './lib/revenuecat';
+import { startBackgroundIndexer } from './lib/visionIndex';
 
 // Kick off RC configure() immediately at startup — before React mounts —
 // so the SDK is ready (or has timed out gracefully) by the time any
 // component calls getCustomerInfo() or getOfferings().
 initializeRevenueCat().catch(console.warn);
+
+// Analyse item photos in the background so text search includes vision labels.
+// Runs one item at a time with 350ms gaps — UI-safe, fully offline.
+startBackgroundIndexer();
 
 // IndexedDB initialises lazily on first query — no explicit init needed here.
 // All data is local; no API base URL or token setup required.
