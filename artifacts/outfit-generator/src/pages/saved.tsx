@@ -20,7 +20,6 @@ import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
 import { FREE_OUTFIT_LIMIT } from "@/lib/entitlements";
 import { WardrobePickerSheet } from "@/components/clothing/WardrobePickerSheet";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
-import { isIndexing, subscribe as subscribeIndexing } from "@/lib/visionIndexSignal";
 
 const SLOT_ORDER = ["outfits", "beauty", "essentials"] as const;
 type SlotKey = (typeof SLOT_ORDER)[number];
@@ -31,13 +30,6 @@ const SLOT_LABELS: Record<SlotKey, string> = {
   essentials: "Areas",
 };
 
-// ── Vision indexing toast ────────────────────────────────────────────────────
-
-function useIsIndexing() {
-  const [v, setV] = useState(isIndexing);
-  useEffect(() => subscribeIndexing(() => setV(isIndexing)), []);
-  return v;
-}
 
 // ── Search scoring ────────────────────────────────────────────────────────────
 
@@ -256,7 +248,6 @@ export default function SavedPage() {
   const addItemToOutfit    = useAddItemToOutfit();
   const queryClient        = useQueryClient();
   const { tier }           = useEntitlements();
-  const indexing           = useIsIndexing();
 
   const [showUpgrade,   setShowUpgrade]   = useState(false);
   const [replacingSlot, setReplacingSlot] = useState<{ outfitId: number; category: SlotKey } | null>(null);
@@ -375,24 +366,6 @@ export default function SavedPage() {
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
       <div ref={pageTopRef} />
-
-      {/* ── "Preparing photo search…" toast ── */}
-      <AnimatePresence>
-        {indexing && (
-          <motion.div
-            key="index-toast"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2
-                       bg-black text-white text-xs font-bold uppercase tracking-wide
-                       px-4 py-2 rounded-full shadow-lg"
-          >
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Preparing photo search…
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <header className="mb-4">
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
