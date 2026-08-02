@@ -1,16 +1,18 @@
 /**
  * Vision indexer — extracts searchable labels from item photos.
  *
- * Web path:  48×48 canvas → dominant color names (background-excluded)
- * Native iOS: Capacitor VisionPlugin → VNClassifyImageRequest + VNRecognizeTextRequest
+ * Web path:    48×48 canvas → dominant color names (background-excluded)
+ * Native iOS:  canvas color extraction  +  Capacitor VisionPlugin
+ *              (VNClassifyImageRequest + VNRecognizeTextRequest) — merged.
  *
  * Version scheme stored on each item (visionVersion):
  *   0  — unanalysed
- *   1  — iOS Vision (correct)
+ *   1  — iOS Vision only, no canvas colors (stale — re-index)
+ *   2  — iOS Vision + canvas colors (current native)
  *   4  — web canvas (current algorithm)
  *   5  — web analysed, no labels found (skip re-run)
  *
- * Re-processes anything < 4 on web to pick up algorithm improvements.
+ * Re-processes anything < 4 on web; anything < 2 on native.
  */
 
 import { Capacitor } from "@capacitor/core";
@@ -18,7 +20,7 @@ import { VisionPlugin } from "./visionPlugin";
 import { getDB } from "./db";
 import { setIndexing } from "./visionIndexSignal";
 
-const NATIVE_VERSION  = 1;
+const NATIVE_VERSION  = 2; // canvas colors now merged on iOS
 const WEB_VERSION     = 4;
 const WEB_EMPTY_VER   = 5; // don't retry if labels were empty
 
@@ -148,21 +150,34 @@ export async function analyzeItem(id: number, imageUrl: string): Promise<void> {
 
   if (Capacitor.isNativePlatform()) {
     try {
-      // Fetch image → base64 for the Swift plugin
-      const res    = await fetch(imageUrl);
-      const blob   = await res.blob();
-      const base64 = await new Promise<string>((resolve) => {
+      // Fetch image once → reuse blob for both paths
+      const res  = await fetch(imageUrl);
+      const blob = await res.blob();
+
+      // Run canvas color extraction and Swift Vision in parallel
+      const blobUrl = URL.createObjectURL(blob);
+      const base64Promise = new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
         reader.readAsDataURL(blob);
       });
 
-      const { labels, text } = await VisionPlugin.analyzeImage({ imageData: base64 });
+      const [canvasColors, base64] = await Promise.all([
+        extractWebColors(blobUrl),
+        base64Promise,
+      ]);
+      URL.revokeObjectURL(blobUrl);
+
+      const { labels: visionLabels, text } = await VisionPlugin.analyzeImage({ imageData: base64 });
+
+      // Merge: canvas colors first (more reliable for color), then Vision object labels
+      const merged = Array.from(new Set([...canvasColors, ...visionLabels]));
+
       const item = await db.get("clothing_items", id) as any;
       if (item) {
         await db.put("clothing_items", {
           ...item, id,
-          visionLabels:  labels,
+          visionLabels:  merged,
           visionText:    text,
           visionVersion: NATIVE_VERSION,
         });

@@ -16,7 +16,6 @@ import { BlobImg } from "@/components/BlobImg";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Heart, Trash2, Save, ChevronDown, Sparkles, Loader2, Check,
-  BookmarkPlus,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -297,8 +296,7 @@ interface ItemDetailsSheetProps {
   item:               ClothingItem | null;
   onClose:            () => void;
   onDeleted?:         () => void;
-  /** When true: shows "Add to Lookbook" + "Cleaned Today" footer buttons.
-   *  When false/absent: shows the photo-area Clean Up Photo row + "Cleaned Today". */
+  /** When true: shows "Add to Lookbook" footer button instead of "Clean Up Photo". */
   showAddToLookbook?: boolean;
 }
 
@@ -344,8 +342,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
   const [form,             setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLookbookPicker, setShowLookbookPicker] = useState(false);
-  const [cleanedToday,     setCleanedToday]     = useState(false);
-
   // "Clean Up Photo" state
   const [bgProcessing,   setBgProcessing]   = useState(false);
   const [bgError,        setBgError]        = useState<string | null>(null);
@@ -496,15 +492,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
           onClose();
         },
       },
-    );
-  };
-
-  const handleCleanedToday = () => {
-    if (!item || cleanedToday) return;
-    setCleanedToday(true);
-    updateItem.mutate(
-      { id: item.id, data: { timesWorn: (item.timesWorn ?? 0) + 1 } },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() }) },
     );
   };
 
@@ -706,8 +693,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
                            shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                            active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
               >
-                <BookmarkPlus className="w-3.5 h-3.5" />
-                Add to Lookbook
+                🫧 Add to Lookbook
               </button>
             ) : (
               <button
@@ -723,16 +709,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
                 {bgProcessing ? "Processing…" : hasBeenCleaned ? "Already Cleaned ✓" : "Clean Up Photo"}
               </button>
             )}
-            <button
-              onClick={handleCleanedToday}
-              disabled={cleanedToday}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs uppercase tracking-wide transition-all
-                ${cleanedToday
-                  ? "border-pink-300/40 bg-pink-50 text-pink-500 cursor-default"
-                  : "border-black bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
-            >
-              {cleanedToday ? "Cleaned ✓" : "🧹 Cleaned Today"}
-            </button>
           </div>
 
           <AnimatePresence>
