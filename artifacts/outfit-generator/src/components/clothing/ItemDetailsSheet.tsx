@@ -595,12 +595,12 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
               )}
             </div>
 
-            {/* "Clean Up Photo" action row — hidden when showAddToLookbook (footer handles it) */}
+            {/* "Clean Up Photo" action row — hidden when showAddToLookbook */}
             {!showAddToLookbook && <div className="flex-shrink-0 border-b-2 border-black bg-white px-4 py-2.5 flex items-center gap-3">
               <button
                 onClick={handleCleanUpPhoto}
                 disabled={bgProcessing || hasBeenCleaned}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-black
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-black
                   text-xs font-bold uppercase tracking-tight transition-all
                   ${bgProcessing || hasBeenCleaned
                     ? "bg-gray-100 text-black/30 cursor-not-allowed"
@@ -684,7 +684,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
         <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
           {/* Context-aware 2-button row */}
           <div className="flex gap-2">
-            {showAddToLookbook ? (
+            {showAddToLookbook && (
               <button
                 onClick={() => setShowLookbookPicker(true)}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-black
@@ -693,19 +693,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
                            active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
               >
                 🫧 Add to Lookbook
-              </button>
-            ) : (
-              <button
-                onClick={handleCleanUpPhoto}
-                disabled={bgProcessing || hasBeenCleaned}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-black
-                  font-bold text-xs uppercase tracking-wide transition-all
-                  ${bgProcessing || hasBeenCleaned
-                    ? "bg-gray-100 text-black/30 cursor-not-allowed"
-                    : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"}`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                {bgProcessing ? "Processing…" : hasBeenCleaned ? "Already Cleaned ✓" : "Clean Up Photo"}
               </button>
             )}
           </div>
