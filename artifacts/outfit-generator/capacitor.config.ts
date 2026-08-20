@@ -24,6 +24,8 @@ const config: CapacitorConfig = {
         'My Cleaning reads your photo library so you can choose existing photos of your clothing items.',
       NSPhotoLibraryAddUsageDescription:
         'My Cleaning saves photos you take with the camera to your photo library.',
+      // 1 = iPhone. Exclude iPad from the generated native app.
+      UIDeviceFamily: [1],
     },
   },
 

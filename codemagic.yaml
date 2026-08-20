@@ -69,6 +69,21 @@ workflows:
           npx cap add ios
           npx cap sync ios
 
+      - name: Configure iPhone-only target
+        script: |
+          set -e
+          PBXPROJ="artifacts/outfit-generator/ios/App/App.xcodeproj/project.pbxproj"
+          # Capacitor templates may emit either quoted or unquoted values.
+          # Keep the project setting aligned with the Info.plist setting.
+          sed -i '' \
+            -e 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g' \
+            -e 's/TARGETED_DEVICE_FAMILY = "1, 2";/TARGETED_DEVICE_FAMILY = 1;/g' \
+            -e 's/TARGETED_DEVICE_FAMILY = 1,2;/TARGETED_DEVICE_FAMILY = 1;/g' \
+            -e 's/TARGETED_DEVICE_FAMILY = 1, 2;/TARGETED_DEVICE_FAMILY = 1;/g' \
+            "$PBXPROJ"
+          echo "Configured iPhone-only target:"
+          grep -n "TARGETED_DEVICE_FAMILY" "$PBXPROJ" || true
+
       - name: Inject native Swift plugins
         script: |
           # Copy the VisionPlugin Swift files into the Xcode project.
@@ -166,6 +181,7 @@ workflows:
             -configuration Release \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS=arm64 \
+            TARGETED_DEVICE_FAMILY=1 \
             DEVELOPMENT_TEAM=2A78MFVCJS \
             CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="My Digital Cleaning AppStore" \
